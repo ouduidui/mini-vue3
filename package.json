@@ -1,0 +1,25 @@
+{
+    "name": "mini-vue3",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "scripts": {
+        "test:mini-vue3": "jest --watch",
+        "example:mini-vue3": "live-server ./packages/vue",
+        "build:mini-vue3": "rollup -c -w --sourcemap rollup.config.js",
+        "dev:mini-vue3": "yarn build:mini-vue3 & yarn example:mini-vue3"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.16.0",
+        "@babel/preset-env": "^7.16.4",
+        "@babel/preset-typescript": "^7.16.0",
+        "@rollup/plugin-typescript": "^8.3.0",
+        "@types/jest": "^27.0.3",
+        "babel-jest": "^27.3.1",
+        "jest": "^27.3.1",
+        "live-server": "^1.2.1",
+        "rollup": "^2.60.0",
+        "tslib": "^2.3.1",
+        "typescript": "^4.5.2"
+    }
+}
