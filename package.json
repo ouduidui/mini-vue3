@@ -5,7 +5,7 @@
     "license": "MIT",
     "scripts": {
         "test:mini-vue3": "jest --watch",
-        "example:mini-vue3": "live-server ./packages/vue",
+        "example:mini-vue3": "live-server packages/vue",
         "build:mini-vue3": "rollup -c -w --sourcemap rollup.config.js",
         "dev:mini-vue3": "yarn build:mini-vue3 & yarn example:mini-vue3"
     },
