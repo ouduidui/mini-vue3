@@ -1,5 +1,5 @@
 import {ComponentInternalInstance, createComponentInstance, Data, setupComponent} from "./component";
-import {EMPTY_ARR, EMPTY_OBJ, ShapeFlags} from "shared/index";
+import {EMPTY_ARR, EMPTY_OBJ, invokeArrayFns, ShapeFlags} from "shared/index";
 import {Text, Fragment, VNode, VNodeArrayChildren, isSameVNodeType} from "runtime-core/vnode";
 import {createAppAPI} from "runtime-core/apiCreateApp";
 import {effect} from "reactivity/effect";
@@ -606,7 +606,13 @@ function baseCreateRenderer(
         const componentUpdateFn = () => {
             if (!instance.isMounted) {  // 初始化
                 // 取出代理，在后续绑定render函数
-                const proxy = instance.proxy;
+                const {proxy, bm, m} = instance;
+
+                // beforeMount Hook
+                if(bm) {
+                    invokeArrayFns(bm);
+                }
+
                 // 执行render函数，获取返回的vnode
                 const subTree = instance.subTree = instance.render.call(proxy);
 
@@ -615,12 +621,21 @@ function baseCreateRenderer(
                 // 当全部组件挂载结束后，赋值el属性
                 initialVNode.el = subTree.el;
 
+                // mounted Hook
+                if(m) {
+                    invokeArrayFns(m);
+                }
+
                 instance.isMounted = true;
             } else {  // 更新
-                let {proxy, next, vnode} = instance;
+                let {proxy, next, vnode, bu, u} = instance;
                 if(next) {
                     next.el = vnode.el;
                     updateComponentPreRender(instance, next);
+                }
+
+                if(bu) {
+                    invokeArrayFns(bu);
                 }
 
                 const nextTree = instance.render.call(proxy);
@@ -628,7 +643,11 @@ function baseCreateRenderer(
                 const prevTree = instance.subTree;
                 instance.subTree = nextTree;
 
-                patch(prevTree, nextTree, container, anchor, instance)
+                patch(prevTree, nextTree, container, anchor, instance);
+
+                if(u) {
+                    invokeArrayFns(u);
+                }
             }
 
         }

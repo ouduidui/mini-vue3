@@ -121,11 +121,37 @@ var capitalize = cacheStringFunction(function (str) { return str.charAt(0).toUpp
 var toHandlerKey = cacheStringFunction(function (str) {
     return str ? "on".concat(capitalize(str)) : "";
 });
+/**
+ * 执行函数数组
+ * @param fns
+ * @param arg
+ */
+var invokeArrayFns = function (fns, arg) {
+    for (var i = 0; i < fns.length; i++) {
+        fns[i](arg);
+    }
+};
 
 // 存储正在被收集依赖的ReactiveEffect实例
 var activeEffect;
 // 判断是否依赖收集
 var shouldTrack = true;
+// 存放修改状态前 shouldTrack 状态
+var trackStack = [];
+/**
+ * 暂停依赖收集
+ */
+function pauseTrack() {
+    trackStack.push(shouldTrack);
+    shouldTrack = false;
+}
+/**
+ * 重置依赖收集
+ */
+function resetTracking() {
+    var last = trackStack.pop();
+    shouldTrack = last === undefined ? true : last;
+}
 var ReactiveEffect = /** @class */ (function () {
     function ReactiveEffect(fn, scheduler) {
         if (scheduler === void 0) { scheduler = null; }
@@ -700,6 +726,10 @@ function createComponentInstance(vnode, parent) {
         emit: null,
         ctx: EMPTY_OBJ,
         isMounted: false,
+        bm: null,
+        m: null,
+        bu: null,
+        u: null
     };
     instance.ctx = { _: instance };
     instance.emit = emit.bind(null, instance);
@@ -1189,24 +1219,38 @@ function baseCreateRenderer(options) {
         var componentUpdateFn = function () {
             if (!instance.isMounted) { // 初始化
                 // 取出代理，在后续绑定render函数
-                var proxy = instance.proxy;
+                var proxy = instance.proxy, bm = instance.bm, m = instance.m;
+                // beforeMount Hook
+                if (bm) {
+                    invokeArrayFns(bm);
+                }
                 // 执行render函数，获取返回的vnode
                 var subTree = instance.subTree = instance.render.call(proxy);
                 patch(null, subTree, container, anchor, instance);
                 // 当全部组件挂载结束后，赋值el属性
                 initialVNode.el = subTree.el;
+                // mounted Hook
+                if (m) {
+                    invokeArrayFns(m);
+                }
                 instance.isMounted = true;
             }
             else { // 更新
-                var proxy = instance.proxy, next = instance.next, vnode = instance.vnode;
+                var proxy = instance.proxy, next = instance.next, vnode = instance.vnode, bu = instance.bu, u = instance.u;
                 if (next) {
                     next.el = vnode.el;
                     updateComponentPreRender(instance, next);
+                }
+                if (bu) {
+                    invokeArrayFns(bu);
                 }
                 var nextTree = instance.render.call(proxy);
                 var prevTree = instance.subTree;
                 instance.subTree = nextTree;
                 patch(prevTree, nextTree, container, anchor, instance);
+                if (u) {
+                    invokeArrayFns(u);
+                }
             }
         };
         instance.update = effect(componentUpdateFn, {
@@ -1298,6 +1342,30 @@ function getSequence(arr) {
     return result;
 }
 
+function injectHook(type, hook, target) {
+    if (target === void 0) { target = currentInstance; }
+    if (target) {
+        var hooks = target[type] || (target[type] = []);
+        hooks.push(function () {
+            pauseTrack();
+            setCurrentInstance(target);
+            hook();
+            unsetCurrentInstance();
+            resetTracking();
+        });
+    }
+}
+var createHook = function (lifecycle) {
+    return function (hook, target) {
+        if (target === void 0) { target = currentInstance; }
+        return injectHook(lifecycle, hook, target);
+    };
+};
+var onBeforeMount = createHook("bm" /* BEFORE_MOUNT */);
+var onMounted = createHook("m" /* MOUNTED */);
+var onBeforeUpdate = createHook("bu" /* BEFORE_UPDATE */);
+var onUpdated = createHook("u" /* UPDATED */);
+
 var doc = (typeof document !== 'undefined' ? document : null);
 var nodeOps = {
     insert: function (child, parent, anchor) {
@@ -1355,6 +1423,10 @@ exports.isProxy = isProxy;
 exports.isReactive = isReactive;
 exports.isReadonly = isReadonly;
 exports.isRef = isRef;
+exports.onBeforeMount = onBeforeMount;
+exports.onBeforeUpdate = onBeforeUpdate;
+exports.onMounted = onMounted;
+exports.onUpdated = onUpdated;
 exports.provide = provide;
 exports.proxyRefs = proxyRefs;
 exports.reactive = reactive;

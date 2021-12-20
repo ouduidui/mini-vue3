@@ -6,9 +6,26 @@ let activeEffect: ReactiveEffect | undefined;
 
 // 判断是否依赖收集
 let shouldTrack = true;
+// 存放修改状态前 shouldTrack 状态
+const trackStack: boolean[] = [];
 
 type EffectScheduler = (...args: any[]) => any;
 
+/**
+ * 暂停依赖收集
+ */
+export function pauseTrack() {
+    trackStack.push(shouldTrack);
+    shouldTrack = false;
+}
+
+/**
+ * 重置依赖收集
+ */
+export function resetTracking() {
+    const last = trackStack.pop()
+    shouldTrack = last === undefined ? true : last
+}
 
 export class ReactiveEffect<T = any> {
     public fn: () => T;

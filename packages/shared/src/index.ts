@@ -73,3 +73,14 @@ export const toHandlerKey = cacheStringFunction((str: string) =>
     str ? `on${capitalize(str)}` : ``
 )
 
+/**
+ * 执行函数数组
+ * @param fns
+ * @param arg
+ */
+export const invokeArrayFns = (fns: Function[], arg?: any) => {
+    for(let i = 0; i < fns.length; i++) {
+        fns[i](arg);
+    }
+}
+

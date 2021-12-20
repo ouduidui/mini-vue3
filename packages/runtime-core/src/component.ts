@@ -30,7 +30,20 @@ export interface ComponentInternalInstance {
     emit: EmitFn,
 
     // lifecycle
-    isMounted: boolean
+    isMounted: boolean,
+    [LifecycleHooks.BEFORE_MOUNT]: LifecycleHook,
+    [LifecycleHooks.MOUNTED]: LifecycleHook,
+    [LifecycleHooks.BEFORE_UPDATE]: LifecycleHook,
+    [LifecycleHooks.UPDATED]: LifecycleHook
+}
+
+type LifecycleHook<TFn = Function> = TFn[] | null
+
+export const enum LifecycleHooks {
+    BEFORE_MOUNT = 'bm',
+    MOUNTED = 'm',
+    BEFORE_UPDATE = 'bu',
+    UPDATED = 'u'
 }
 
 export let currentInstance: ComponentInternalInstance | null = null
@@ -66,6 +79,10 @@ export function createComponentInstance(
         emit: null!,
         ctx: EMPTY_OBJ,
         isMounted: false,
+        bm: null,
+        m: null,
+        bu: null,
+        u: null
     }
 
     instance.ctx = {_: instance};
