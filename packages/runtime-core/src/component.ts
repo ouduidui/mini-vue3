@@ -16,19 +16,21 @@ export interface ComponentInternalInstance {
     vnode: VNode,
     type: any,
     parent: ComponentInternalInstance | null,
+    next: VNode | null,
+    subTree: VNode,
+    update: any,
     render: any,
-
     proxy: any  // 代理this
-
     ctx: Data,
-
     provides: Data,
-
     // state
     setupState: Data,
     props: Data,
     slots: InternalSlots,
-    emit: EmitFn
+    emit: EmitFn,
+
+    // lifecycle
+    isMounted: boolean
 }
 
 export let currentInstance: ComponentInternalInstance | null = null
@@ -52,6 +54,9 @@ export function createComponentInstance(
         vnode,
         type: vnode.type,
         parent,
+        next: null!,
+        subTree: null!,
+        update: null!,
         render: null,
         proxy: null,
         provides: parent ? parent.provides : EMPTY_OBJ,
@@ -59,7 +64,8 @@ export function createComponentInstance(
         props: EMPTY_OBJ,
         slots: EMPTY_OBJ,
         emit: null!,
-        ctx: EMPTY_OBJ
+        ctx: EMPTY_OBJ,
+        isMounted: false,
     }
 
     instance.ctx = {_: instance};

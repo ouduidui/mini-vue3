@@ -1,5 +1,4 @@
 import {currentInstance} from "runtime-core/component";
-import {def} from "../../../../vue3/packages/shared/src/index";
 import {isFunction} from "shared/index";
 
 export interface InjectionKey<T> extends Symbol {}

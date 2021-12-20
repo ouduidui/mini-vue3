@@ -1,4 +1,5 @@
 import {RendererOptions} from "runtime-core/index";
+import {isOn} from "shared/index";
 
 type DOMRendererOptions = RendererOptions<Node, Element>
 
@@ -8,11 +9,14 @@ export const patchProp: DOMRendererOptions['patchProp'] = (
     prevValue,
     nextValue
 ) => {
-    const isOn = (key: string) => /^on[A-Z]/.test(key);
     if (isOn(key)) {
         const event = key.slice(2).toLocaleLowerCase();
         el.addEventListener(event, nextValue);
     } else {
-        el.setAttribute(key, nextValue);
+        if(nextValue === undefined || nextValue === null) {
+            el.removeAttribute(key);
+        }else {
+            el.setAttribute(key, nextValue);
+        }
     }
 }

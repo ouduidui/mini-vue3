@@ -1,5 +1,8 @@
 export * from './shapeFlags'
 
+const onRE = /^on[^a-z]/
+export const isOn = (key: string) => onRE.test(key)
+
 // 将所有可枚举属性的值从一个或多个源对象分配到目标对象
 export const extend = Object.assign
 
@@ -25,6 +28,8 @@ export const hasChanged = (value: any, oldValue: any): boolean => !Object.is(val
 export const NOOP = () => {}
 // 空对象
 export const EMPTY_OBJ = {}
+// 空对象
+export const EMPTY_ARR = []
 
 
 /**

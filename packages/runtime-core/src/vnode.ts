@@ -1,4 +1,4 @@
-import {Component, Data} from "runtime-core/component";
+import {Component, ComponentInternalInstance, Data} from "runtime-core/component";
 import {Ref} from "reactivity/ref";
 import {RendererNode, RendererElement} from "./renderer"
 import {isObject, isString, ShapeFlags} from "shared/index"
@@ -26,6 +26,10 @@ export interface VNode<HostNode = RendererNode,
     type: VNodeTypes,
     props: VNodeProps | null,
     children: VNodeNormalizedChildren
+    key: string | number | symbol | null,
+
+    // Component
+    component: ComponentInternalInstance | null,
 
     // DOM
     el: HostNode | null
@@ -77,6 +81,9 @@ export function createVNode(
     )
 }
 
+const normalizeKey = ({ key }: VNodeProps): VNode['key'] =>
+    key != null ? key : null
+
 function createBaseVNode(
     type: VNodeTypes,
     props: (Data & VNodeProps) | null = null,
@@ -90,7 +97,9 @@ function createBaseVNode(
         props,
         children,
         shapeFlag,
-        el: null
+        component: null,
+        el: null,
+        key: props && normalizeKey(props)
     } as VNode
 
     if (children) {
@@ -107,7 +116,10 @@ function createBaseVNode(
     return vnode;
 }
 
-
 export function createTextVNode(text: string = ' ') {
     return createVNode(Text, {}, text);
+}
+
+export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
+    return n1.type === n2.type && n1.key === n2.key
 }
