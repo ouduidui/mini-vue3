@@ -1,4 +1,4 @@
-import {h, ref, onBeforeMount, onMounted, onBeforeUpdate, onUpdated} from "../../dist/mini-vue.esm.js";
+import {h, ref, onBeforeMount, onMounted, onBeforeUpdate, onUpdated, nextTick} from "../../dist/mini-vue.esm.js";
 
 export const App = {
     render() {
@@ -17,10 +17,13 @@ export const App = {
         const msg = ref('');
 
         onBeforeMount(() => {
-            console.log('onBeforeMount')
+            console.log('onBeforeMount');
         });
 
         onMounted(() => {
+            nextTick(() => {
+                console.log('nextTick')
+            })
             console.log('onMounted');
             setTimeout(() => {
                 msg.value = 'HelloWorld';

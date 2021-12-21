@@ -857,6 +857,100 @@ function hasPropsChanged(prevProps, nextProps) {
     return false;
 }
 
+var isFlushing = false;
+var isFlushPending = false;
+var queue = [];
+var flushIndex = 0;
+var pendingPreFlushCbs = [];
+var activePreFlushCbs = null;
+var preFlushIndex = 0;
+var pendingPostFlushCbs = [];
+var activePostFlushCbs = null;
+var postFlushIndex = 0;
+var resolvedPromise = Promise.resolve();
+var currentFlushPromise = null;
+function nextTick(fn) {
+    var p = currentFlushPromise || resolvedPromise;
+    return fn ? p.then(fn) : p;
+}
+function queuePostFlushCb(cb) {
+    queueCb(cb, activePostFlushCbs, pendingPostFlushCbs, postFlushIndex);
+}
+function queueFlush() {
+    if (!isFlushing && !isFlushPending) {
+        isFlushPending = true;
+        currentFlushPromise = resolvedPromise.then(flushJobs);
+    }
+}
+function flushJobs() {
+    isFlushPending = false;
+    isFlushing = true;
+    flushPreFlushCbs();
+    queue.sort(function (a, b) { return getId(a) - getId(b); });
+    try {
+        for (flushIndex = 0; flushIndex < queue.length; flushIndex++) {
+            var job = queue[flushIndex];
+            job();
+        }
+    }
+    finally {
+        flushIndex = 0;
+        queue.length = 0;
+        flushPostFlushCbs();
+        isFlushing = false;
+        currentFlushPromise = null;
+        if (queue.length ||
+            pendingPreFlushCbs.length ||
+            pendingPostFlushCbs.length) {
+            flushJobs();
+        }
+    }
+}
+function flushPreFlushCbs() {
+    if (pendingPreFlushCbs.length) {
+        activePreFlushCbs = __spreadArray([], __read(new Set(pendingPreFlushCbs)), false);
+        pendingPreFlushCbs.length = 0;
+        for (preFlushIndex = 0; preFlushIndex < activePreFlushCbs.length; preFlushIndex++) {
+            activePreFlushCbs[preFlushIndex]();
+        }
+        activePreFlushCbs = null;
+        preFlushIndex = 0;
+    }
+}
+function flushPostFlushCbs() {
+    if (pendingPostFlushCbs.length) {
+        var deduped = __spreadArray([], __read(new Set(pendingPostFlushCbs)), false);
+        pendingPostFlushCbs.length = 0;
+        if (activePostFlushCbs) {
+            activePostFlushCbs.push.apply(activePostFlushCbs, __spreadArray([], __read(deduped), false));
+            return;
+        }
+        activePostFlushCbs = deduped;
+        activePostFlushCbs.sort(function (a, b) { return getId(a) - getId(b); });
+        for (postFlushIndex = 0; postFlushIndex < activePostFlushCbs.length; postFlushIndex++) {
+            activePostFlushCbs[postFlushIndex]();
+        }
+        activePostFlushCbs = null;
+        postFlushIndex = 0;
+    }
+}
+function queueCb(cb, activeQueue, pendingQueue, index) {
+    if (!isArray(cb)) {
+        if (!activeQueue ||
+            !activeQueue.includes(cb, index)) {
+            pendingQueue.push(cb);
+        }
+    }
+    else {
+        pendingQueue.push.apply(pendingQueue, __spreadArray([], __read(cb), false));
+    }
+    queueFlush();
+}
+var getId = function (job) {
+    return job.id == null ? Infinity : job.id;
+};
+
+var queuePostRenderEffect = queuePostFlushCb;
 function createRenderer(options) {
     return baseCreateRenderer(options);
 }
@@ -1227,7 +1321,7 @@ function baseCreateRenderer(options) {
                 initialVNode.el = subTree.el;
                 // mounted Hook
                 if (m) {
-                    invokeArrayFns(m);
+                    queuePostRenderEffect(m);
                 }
                 instance.isMounted = true;
             }
@@ -1245,7 +1339,7 @@ function baseCreateRenderer(options) {
                 instance.subTree = nextTree;
                 patch(prevTree, nextTree, container, anchor, instance);
                 if (u) {
-                    invokeArrayFns(u);
+                    queuePostRenderEffect(u);
                 }
             }
         };
@@ -1407,5 +1501,5 @@ var createApp = function () {
     return renderer.createApp.apply(renderer, __spreadArray([], __read(args), false));
 };
 
-export { computed, createApp, createRenderer, createTextVNode, effect, getCurrentInstance, h, inject, isProxy, isReactive, isReadonly, isRef, onBeforeMount, onBeforeUpdate, onMounted, onUpdated, provide, proxyRefs, reactive, readonly, ref, renderSlot, shallowReactive, shallowReadonly, toReactive, triggerRefValue, unref };
+export { computed, createApp, createRenderer, createTextVNode, effect, getCurrentInstance, h, inject, isProxy, isReactive, isReadonly, isRef, nextTick, onBeforeMount, onBeforeUpdate, onMounted, onUpdated, provide, proxyRefs, reactive, readonly, ref, renderSlot, shallowReactive, shallowReadonly, toReactive, triggerRefValue, unref };
 //# sourceMappingURL=mini-vue.esm.js.map

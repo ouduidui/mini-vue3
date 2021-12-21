@@ -4,6 +4,7 @@ import {Text, Fragment, VNode, VNodeArrayChildren, isSameVNodeType} from "runtim
 import {createAppAPI} from "runtime-core/apiCreateApp";
 import {effect} from "reactivity/effect";
 import {shouldUpdateComponent} from "runtime-core/componentRenderUtils";
+import {queuePostFlushCb} from "runtime-core/scheduler";
 
 export interface RendererNode {
     [key: string]: any
@@ -54,6 +55,7 @@ type MountChildrenFn = (
     start?: number
 ) => void
 
+export const queuePostRenderEffect = queuePostFlushCb;
 
 export function createRenderer<HostNode = RendererNode,
     HostElement = RendererElement>(options: RendererOptions<HostNode, HostElement>) {
@@ -623,7 +625,7 @@ function baseCreateRenderer(
 
                 // mounted Hook
                 if(m) {
-                    invokeArrayFns(m);
+                    queuePostRenderEffect(m);
                 }
 
                 instance.isMounted = true;
@@ -646,7 +648,7 @@ function baseCreateRenderer(
                 patch(prevTree, nextTree, container, anchor, instance);
 
                 if(u) {
-                    invokeArrayFns(u);
+                    queuePostRenderEffect(u);
                 }
             }
 

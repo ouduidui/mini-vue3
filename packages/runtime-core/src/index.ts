@@ -10,5 +10,6 @@ export {
     onBeforeUpdate,
     onUpdated
 } from "./apiLifecycle";
+export {nextTick} from "./scheduler";
 
 
