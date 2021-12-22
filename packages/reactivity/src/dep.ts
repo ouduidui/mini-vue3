@@ -7,5 +7,5 @@ export type Dep = Set<ReactiveEffect>;
  * @param effects
  */
 export const createDep = (effects?: ReactiveEffect[]): Dep => {
-	return new Set<ReactiveEffect>(effects) as Dep;
+  return new Set<ReactiveEffect>(effects) as Dep;
 };

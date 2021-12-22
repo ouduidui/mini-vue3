@@ -33,14 +33,14 @@ export const EMPTY_ARR = [];
  * @param fn
  */
 const cacheStringFunction = <T extends (str: string) => string>(fn: T): T => {
-	// 缓存空间
-	const cache: Record<string, string> = Object.create(null);
+  // 缓存空间
+  const cache: Record<string, string> = Object.create(null);
 
-	return ((str: string) => {
-		// 先查看缓存是否存在，不存在则调用函数
-		const hit = cache[str];
-		return hit || (cache[str] = fn(str));
-	}) as any;
+  return ((str: string) => {
+    // 先查看缓存是否存在，不存在则调用函数
+    const hit = cache[str];
+    return hit || (cache[str] = fn(str));
+  }) as any;
 };
 
 const camelizeRE = /-(\w)/g;
@@ -50,7 +50,7 @@ const camelizeRE = /-(\w)/g;
  * @private
  */
 export const camelize = cacheStringFunction((str: string): string => {
-	return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''));
+  return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''));
 });
 
 /**
@@ -71,7 +71,7 @@ export const toHandlerKey = cacheStringFunction((str: string) => (str ? `on${cap
  * @param arg
  */
 export const invokeArrayFns = (fns: Function[], arg?: any) => {
-	for (let i = 0; i < fns.length; i++) {
-		fns[i](arg);
-	}
+  for (let i = 0; i < fns.length; i++) {
+    fns[i](arg);
+  }
 };

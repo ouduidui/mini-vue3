@@ -8,26 +8,26 @@ export type Slot = (...args: any[]) => VNode[];
 export type Slots = Readonly<InternalSlots>;
 
 export type InternalSlots = {
-	[name: string]: Slot | undefined;
+  [name: string]: Slot | undefined;
 };
 
 export type RawSlots = {
-	[name: string]: unknown;
+  [name: string]: unknown;
 };
 
 const normalizeSlotValue = (value: unknown): VNode[] => (isArray(value) ? value : [value]);
 
 function normalizeObjectSlots(rawSlots: RawSlots, slots: InternalSlots) {
-	for (const key in rawSlots) {
-		const value = rawSlots[key];
-		if (isFunction(value)) {
-			slots[key] = (props) => normalizeSlotValue(value(props));
-		}
-	}
+  for (const key in rawSlots) {
+    const value = rawSlots[key];
+    if (isFunction(value)) {
+      slots[key] = (props) => normalizeSlotValue(value(props));
+    }
+  }
 }
 
 export function initSlots(instance: ComponentInternalInstance, children: VNodeNormalizedChildren) {
-	if (instance.vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
-		normalizeObjectSlots(children as unknown as RawSlots, (instance.slots = {}));
-	}
+  if (instance.vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
+    normalizeObjectSlots(children as unknown as RawSlots, (instance.slots = {}));
+  }
 }
