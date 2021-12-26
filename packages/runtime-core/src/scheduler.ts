@@ -93,7 +93,7 @@ function flushPreFlushCbs() {
   }
 }
 
-function flushPostFlushCbs() {
+export function flushPostFlushCbs() {
   if (pendingPostFlushCbs.length) {
     const deduped = [...new Set(pendingPostFlushCbs)];
     pendingPostFlushCbs.length = 0;

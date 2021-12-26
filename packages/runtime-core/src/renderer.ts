@@ -4,7 +4,7 @@ import { Text, Fragment, VNode, VNodeArrayChildren, isSameVNodeType } from 'runt
 import { createAppAPI } from 'runtime-core/apiCreateApp';
 import { effect } from 'reactivity/effect';
 import { shouldUpdateComponent } from 'runtime-core/componentRenderUtils';
-import { queuePostFlushCb } from 'runtime-core/scheduler';
+import { queueJob, queuePostFlushCb, flushPostFlushCbs } from 'runtime-core/scheduler';
 
 export interface RendererNode {
   [key: string]: any;
@@ -46,6 +46,10 @@ type MountChildrenFn = (
 
 export const queuePostRenderEffect = queuePostFlushCb;
 
+/**
+ * 工厂函数 —— 生成renderer
+ * @param options
+ */
 export function createRenderer<HostNode = RendererNode, HostElement = RendererElement>(
   options: RendererOptions<HostNode, HostElement>
 ) {
@@ -53,6 +57,7 @@ export function createRenderer<HostNode = RendererNode, HostElement = RendererEl
 }
 
 function baseCreateRenderer(options: RendererOptions): any {
+  // 解析出节点操作函数
   const {
     patchProp: hostPatchProp,
     remove: hostRemove,
@@ -70,6 +75,8 @@ function baseCreateRenderer(options: RendererOptions): any {
     if (vnode !== null) {
       patch(null, vnode, container, null, null);
     }
+
+    flushPostFlushCbs();
   };
 
   /**
@@ -259,6 +266,14 @@ function baseCreateRenderer(options: RendererOptions): any {
     }
   }
 
+  /**
+   * 对比两个数组节点
+   * @param c1 旧节点
+   * @param c2 新节点
+   * @param container
+   * @param parentAnchor
+   * @param parentComponent
+   */
   function patchKeyedChildren(
     c1: VNode[],
     c2: VNode[],
@@ -273,6 +288,7 @@ function baseCreateRenderer(options: RendererOptions): any {
 
     // (a b) c
     // (a b) d e
+    // 从头开始遍历，当两个虚拟节点为相同类型的话，进行patch
     while (i <= e1 && i <= e2) {
       const n1 = c1[i];
       const n2 = c2[i];
@@ -287,6 +303,7 @@ function baseCreateRenderer(options: RendererOptions): any {
 
     // a (b c)
     // d e (b c)
+    // 从尾部开始遍历，当两个虚拟节点为相同类型的话，进行patch
     while (i <= e1 && i <= e2) {
       const n1 = c1[e1];
       const n2 = c2[e2];
@@ -306,10 +323,14 @@ function baseCreateRenderer(options: RendererOptions): any {
     // (a b)
     // c (a b)
     // i = 0, e1 = -1, e2 = 0
+    // 当旧节点已经遍历完了，没有剩余还没处理的节点，同时新节点还有剩余的时候
+    // 新增节点
     if (i > e1) {
       if (i <= e2) {
+        // 获取相邻锚点容器
         const nextPos = e2 + 1;
         const anchor = nextPos < l2 ? (c2[nextPos] as VNode).el : parentAnchor;
+        // 遍历剩余新节点，一一进行patch
         while (i <= e2) {
           patch(null, c2[i], container, anchor, parentComponent);
           i++;
@@ -323,6 +344,8 @@ function baseCreateRenderer(options: RendererOptions): any {
     // a (b c)
     // (b c)
     // i = 0, e1 = 0, e2 = -1
+    // 当新节点全部处理完成，没有剩余节点；而旧节点还有剩余节点时
+    // 删除节点
     else if (i > e2) {
       while (i <= e1) {
         hostRemove(c1[i].el!);
@@ -333,10 +356,12 @@ function baseCreateRenderer(options: RendererOptions): any {
     // [i ... e1 + 1]: a b [c d e] f g
     // [i ... e2 + 1]: a b [e d c h] f g
     // i = 2, e1 = 4, e2 = 5
+    // 当新旧节点还有剩余的时候，进行暴力解法
     else {
       const s1 = i;
       const s2 = i;
 
+      // 遍历剩余的新节点，生成一份节点key -> index 的映射表keyToNewIndexMap
       const keyToNewIndexMap = new Map<string | number | symbol, number>();
       for (i = s2; i <= e2; i++) {
         const nextChild = c2[i];
@@ -346,16 +371,19 @@ function baseCreateRenderer(options: RendererOptions): any {
       }
 
       let j;
-      let patched = 0;
-      const toBePatched = e2 - s2 + 1;
-      let moved = false;
+      let patched = 0; // 统计对比过的数量
+      const toBePatched = e2 - s2 + 1; // 未处理的新节点剩余数量
+      let moved = false; // 判断是否存在移动节点的操作
       let maxNewIndexSoFar = 0;
 
+      // 生成一个toBePatched长度的数组，用于新节点对应旧节点的下标
       const newIndexToOldIndexMap = new Array(toBePatched).fill(0);
 
+      // 遍历剩余的旧节点
       for (i = s1; i <= e1; i++) {
         const prevChild = c1[i];
 
+        // 当旧节点超过新节点的时候，直接删除节点
         if (patched >= toBePatched) {
           hostRemove(prevChild.el!);
           continue;
@@ -363,8 +391,10 @@ function baseCreateRenderer(options: RendererOptions): any {
 
         let newIndex;
         if (prevChild.key !== null) {
+          // 如果当前旧节点存在key值，则从keyToNewIndexMap映射表查找有没有对应的新节点，有则获取其下标
           newIndex = keyToNewIndexMap.get(prevChild.key);
         } else {
+          // 如果当前旧节点不存在key值，则遍历剩余新节点，一一匹配，如果匹配到了，则获取其下标
           for (j = s2; j <= e2; j++) {
             if (newIndexToOldIndexMap[j - s2] === 0 && isSameVNodeType(prevChild, c2[j])) {
               newIndex = j;
@@ -374,31 +404,47 @@ function baseCreateRenderer(options: RendererOptions): any {
         }
 
         if (newIndex === undefined) {
+          // 如果此时还没匹配到对应的新节点的话，则删除该旧节点
           hostRemove(prevChild.el!);
         } else {
+          // 如果匹配到则更新节点
+          // 更新该新节点对应的旧节点位置
           newIndexToOldIndexMap[newIndex - s2] = i + 1;
+          // 判断整个流程是否需要移动到节点
           if (newIndex >= maxNewIndexSoFar) {
             maxNewIndexSoFar = newIndex;
           } else {
             moved = true;
           }
+          // 进行节点对比
           patch(prevChild, c2[newIndex], container, null, parentComponent);
+          // 更新已经对比过的数量
           patched++;
         }
       }
 
+      // [2, 5, 3, 1]
+      // [0, 2]
+      // 如果需要进行节点移动，则根据newIndexToOldIndexMap生成最长递增子序列在原数组的下标数组
       const increasingNewIndexSequence = moved ? getSequence(newIndexToOldIndexMap) : EMPTY_ARR;
-      j = increasingNewIndexSequence.length + 1;
+      // increasingNewIndexSequence 最后下标
+      j = increasingNewIndexSequence.length - 1;
+      // 倒序遍历暴力解法中所有的新节点
       for (i = toBePatched - 1; i >= 0; i--) {
-        const nexIndex = s2 + i;
-        const nextChild = c2[nexIndex];
-        const anchor = nexIndex + 1 < l2 ? c2[nexIndex + 1].el : parentAnchor;
+        const nextIndex = s2 + i; // 新节点的下标
+        const nextChild = c2[nextIndex]; // 新节点
+        const anchor = nextIndex + 1 < l2 ? c2[nextIndex + 1].el : parentAnchor; // 获取锚点
         if (newIndexToOldIndexMap[i] === 0) {
+          // 如果newIndexToOldIndexMap[i] === 0，则代表该新新节点在前面没有匹配到对应的旧节点，则新增节点
           patch(null, nextChild, container, anchor, parentComponent);
         } else if (moved) {
+          // 如果需要进行到节点移动
           if (j < 0 || i !== increasingNewIndexSequence[j]) {
+            // j 已经没有了 说明剩下的都需要移动了
+            // 最长子序列里面的值和当前的值匹配不上，说明当前元素需要移动
             hostInsert(nextChild.el!, container, anchor);
           } else {
+            // 满足 i === increasingNewIndexSequence[j]，因此不需要移动了，则递减 j
             j--;
           }
         }
@@ -531,8 +577,7 @@ function baseCreateRenderer(options: RendererOptions): any {
     };
 
     instance.update = effect(componentUpdateFn, {
-      // TODO 微任务队列
-      // scheduler: () => {}
+      scheduler: () => queueJob(instance.update)
     });
   }
 
