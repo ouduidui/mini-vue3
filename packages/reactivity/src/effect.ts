@@ -91,13 +91,13 @@ const targetMap = new WeakMap<any, KeyToDepMap>();
  * @param key key值
  */
 export function track(target: object, key) {
+  // 判断是否可以收集依赖
   if (!isTracking()) return;
 
   // 获取对应依赖的depsMap
   let depsMap = targetMap.get(target);
   // 没有则初始化
   if (!depsMap) {
-    depsMap = new Map();
     targetMap.set(target, (depsMap = new Map()));
   }
 
@@ -105,8 +105,7 @@ export function track(target: object, key) {
   let dep = depsMap.get(key);
   // 没有则初始化
   if (!dep) {
-    dep = createDep();
-    depsMap.set(key, dep);
+    depsMap.set(key, (dep = createDep()));
   }
 
   // 存储依赖

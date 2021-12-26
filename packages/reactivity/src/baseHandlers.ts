@@ -48,6 +48,9 @@ function createGetter(isReadonly = false, shallow = false) {
 
 const set = createSetter(); // 响应式
 
+/**
+ * 创建Proxy的set处理函数
+ */
 function createSetter() {
   return function set(target, key, value) {
     // 执行set操作，并获取新的value值
