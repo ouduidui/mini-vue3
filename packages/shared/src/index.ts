@@ -6,6 +6,9 @@ export const isOn = (key: string) => onRE.test(key);
 // 将所有可枚举属性的值从一个或多个源对象分配到目标对象
 export const extend = Object.assign;
 
+export const objectToString = Object.prototype.toString;
+export const toTypeString = (value: unknown): string => objectToString.call(value);
+
 // 判断是否为字符串
 export const isString = (val: unknown): val is string => typeof val === 'string';
 // 判断是否为数组
@@ -14,6 +17,7 @@ export const isArray = Array.isArray;
 export const isFunction = (val: unknown): val is Function => typeof val === 'function';
 // 判断是否为对象
 export const isObject = (val: unknown): val is Record<any, any> => val !== null && typeof val === 'object';
+export const isPlainObject = (val: unknown): val is object => toTypeString(val) === '[object Object]';
 // 判断对象是否存在该属性
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 export const hasOwn = (val: object, key: string | symbol): key is keyof typeof val => hasOwnProperty.call(val, key);

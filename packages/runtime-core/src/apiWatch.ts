@@ -1,7 +1,7 @@
 import { isRef, Ref } from 'reactivity/ref';
 import { currentInstance } from 'runtime-core/component';
 import { isReactive } from 'reactivity/reactive';
-import { hasChanged, isArray, isFunction, isObject, NOOP } from 'shared/index';
+import { hasChanged, isArray, isFunction, isObject, isPlainObject, NOOP } from 'shared/index';
 import { EffectScheduler, ReactiveEffect } from 'reactivity/effect';
 import { queuePreFlushCb, SchedulerJob } from 'runtime-core/scheduler';
 
@@ -105,6 +105,10 @@ function traverse(value: unknown, seen?: Set<unknown>) {
   } else if (isArray(value)) {
     for (let i = 0; i < value.length; i++) {
       traverse(value[i], seen);
+    }
+  } else if (isPlainObject(value)) {
+    for (const key in value) {
+      traverse((value as any)[key], seen);
     }
   }
 
