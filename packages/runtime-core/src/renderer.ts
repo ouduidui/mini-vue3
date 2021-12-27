@@ -1,10 +1,10 @@
 import { ComponentInternalInstance, createComponentInstance, Data, setupComponent } from './component';
 import { EMPTY_ARR, EMPTY_OBJ, invokeArrayFns, ShapeFlags } from 'shared/index';
 import { Text, Fragment, VNode, VNodeArrayChildren, isSameVNodeType } from 'runtime-core/vnode';
-import { createAppAPI } from 'runtime-core/apiCreateApp';
+import { createAppAPI } from './apiCreateApp';
 import { effect } from 'reactivity/effect';
 import { shouldUpdateComponent } from 'runtime-core/componentRenderUtils';
-import { queueJob, queuePostFlushCb, flushPostFlushCbs } from 'runtime-core/scheduler';
+import { queueJob, queuePostFlushCb, flushPostFlushCbs } from './scheduler';
 
 export interface RendererNode {
   [key: string]: any;
@@ -59,11 +59,11 @@ export function createRenderer<HostNode = RendererNode, HostElement = RendererEl
 function baseCreateRenderer(options: RendererOptions): any {
   // 解析出节点操作函数
   const {
-    patchProp: hostPatchProp,
-    remove: hostRemove,
-    insert: hostInsert,
-    createElement: hostCreateElement,
-    setElementText: hostSetElementText
+    patchProp: hostPatchProp, // 更新属性
+    remove: hostRemove, // 删除节点
+    insert: hostInsert, // 插入节点
+    createElement: hostCreateElement, // 创建节点
+    setElementText: hostSetElementText // 设置节点文本
   } = options;
 
   /**
