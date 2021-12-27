@@ -20,9 +20,9 @@ let isFlushing = false;
 // 判断是否预备执行异步任务，也就是将异步任务加入异步队列中
 let isFlushPending = false;
 
-// job类型任务下标
+// job类型任务队列
 const queue: SchedulerJob[] = [];
-// 真正执行的job任务下标
+// 正在执行的job任务下标
 let flushIndex = 0;
 
 // 等待处理的Pre任务队列
@@ -80,8 +80,8 @@ function queueCb(cb: SchedulerJobs, activeQueue: SchedulerJob[] | null, pendingQ
  * @param job
  */
 export function queueJob(job: SchedulerJob) {
-  // 如果queue队列为空，直接插入
-  // 如果queue有值，
+  // 如果queue队列为空，直接插入队列
+  // 如果queue有值，判断未执行的任务是否有相同的，没有则插入队列
   if (!queue.length || !queue.includes(job, flushIndex)) {
     queue.push(job);
   }
