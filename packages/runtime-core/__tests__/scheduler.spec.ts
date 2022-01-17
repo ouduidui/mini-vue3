@@ -1,11 +1,4 @@
-import {
-  queueJob,
-  nextTick,
-  queuePostFlushCb,
-  queuePreFlushCb,
-  flushPreFlushCbs,
-  flushPostFlushCbs
-} from '../src/scheduler';
+import { queueJob, nextTick, queuePostFlushCb, queuePreFlushCb } from '../src/scheduler';
 
 describe('scheduler', () => {
   it('nextTick', async () => {
