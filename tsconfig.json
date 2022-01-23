@@ -52,6 +52,7 @@
     "baseUrl": "." /* Base directory to resolve non-absolute module names. */,
     "paths": {
       /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+      "compiler-core/*": ["packages/compiler-core/src/*"],
       "runtime-core/*": ["packages/runtime-core/src/*"],
       "runtime-dom/*": ["packages/runtime-dom/src/*"],
       "shared/*": ["packages/shared/src/*"],
