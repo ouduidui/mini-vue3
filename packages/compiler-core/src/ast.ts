@@ -18,13 +18,19 @@ export interface SimpleExpressionNode {
   content: string;
 }
 
+// 文本节点类型
+export interface TextNode extends Node {
+  type: NodeTypes.TEXT;
+  content: string;
+}
+
 // 插值节点类型
 export interface InterpolationNode extends Node {
   type: NodeTypes.INTERPOLATION;
   content: ExpressionNode;
 }
 
-export type TemplateChildNode = InterpolationNode;
+export type TemplateChildNode = InterpolationNode | TextNode;
 
 export interface RootNode extends Node {
   type: NodeTypes.ROOT;

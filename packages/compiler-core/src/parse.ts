@@ -1,4 +1,4 @@
-import { createRoot, InterpolationNode, NodeTypes, RootNode, TemplateChildNode } from 'compiler-core/ast';
+import { createRoot, InterpolationNode, NodeTypes, RootNode, TemplateChildNode, TextNode } from 'compiler-core/ast';
 import { isArray } from 'shared/index';
 
 // 默认配置
@@ -66,6 +66,10 @@ function parseChildren(context: ParserContext, mode: TextModes): TemplateChildNo
       }
     }
 
+    if (!node) {
+      node = parseText(context);
+    }
+
     // 将这部分解析完的节点插入容器中
     if (isArray(node)) {
       for (let i = 0; i < node.length; i++) {
@@ -79,6 +83,10 @@ function parseChildren(context: ParserContext, mode: TextModes): TemplateChildNo
   return nodes;
 }
 
+/**
+ * 解析插值
+ * @param context
+ */
 function parseInterpolation(context: ParserContext): InterpolationNode | undefined {
   // open -> '{{'   close -> '}}'
   const [open, close] = context.options.delimiters;
@@ -95,7 +103,7 @@ function parseInterpolation(context: ParserContext): InterpolationNode | undefin
   const rawContent = context.source.slice(0, rawContentLength);
   // 去除空格
   const content = rawContent.trim();
-  // 剩余部分内容
+  // 删除剩余部分内容
   advanceBy(context, rawContentLength + close.length);
 
   return {
@@ -104,6 +112,33 @@ function parseInterpolation(context: ParserContext): InterpolationNode | undefin
       type: NodeTypes.SIMPLE_EXPRESSION,
       content: content
     }
+  };
+}
+
+/**
+ * 解析文本
+ * @param context
+ */
+function parseText(context: ParserContext): TextNode {
+  // 解析到'<'或'{{'
+  const endTokens = ['<', context.options.delimiters[0]];
+
+  let endIndex = context.source.length;
+  for (let i = 0; i < endTokens.length; i++) {
+    const index = context.source.indexOf(endTokens[i], 1);
+    if (index !== -1 && endIndex > index) {
+      endIndex = index;
+    }
+  }
+
+  // 解析出文本
+  const content = context.source.slice(0, endIndex);
+  // 删除原文本
+  advanceBy(context, endIndex);
+
+  return {
+    type: NodeTypes.TEXT,
+    content
   };
 }
 
