@@ -1,4 +1,13 @@
-import { createRoot, InterpolationNode, NodeTypes, RootNode, TemplateChildNode, TextNode } from 'compiler-core/ast';
+import {
+  createRoot,
+  ElementNode,
+  ElementTypes,
+  InterpolationNode,
+  NodeTypes,
+  RootNode,
+  TemplateChildNode,
+  TextNode
+} from 'compiler-core/ast';
 import { isArray } from 'shared/index';
 
 // 默认配置
@@ -27,7 +36,7 @@ export interface ParserContext {
 export function baseParse(content: string): RootNode {
   const context = createParserContext(content); // 创建一个解析上下文
   // 创建一个根AST
-  return createRoot(parseChildren(context, TextModes.DATA) /* 解析孩子内容 */);
+  return createRoot(parseChildren(context, []) /* 解析孩子内容 */);
 }
 
 /**
@@ -46,23 +55,26 @@ function createParserContext(content: string): ParserContext {
 /**
  * 解析孩子模板内容
  * @param context
- * @param mode
+ * @param ancestors
  */
-function parseChildren(context: ParserContext, mode: TextModes): TemplateChildNode[] {
+function parseChildren(context: ParserContext, ancestors: ElementNode[]): TemplateChildNode[] {
   // 初始化节点容器
   const nodes: TemplateChildNode[] = [];
 
   // 遍历模板模板内容（每解析完一部分内容，就会将其在source中删除）
-  while (!isEnd(context)) {
+  while (!isEnd(context, ancestors)) {
     // 获取剩余的模板字符串
     const s = context.source;
     // 初始化节点
     let node: TemplateChildNode | TemplateChildNode[] | undefined = undefined;
 
-    if (mode === TextModes.DATA || mode === TextModes.RCDATA) {
-      if (startsWith(s, context.options.delimiters[0])) {
-        // 插值节点
-        node = parseInterpolation(context);
+    if (startsWith(s, context.options.delimiters[0])) {
+      // 插值节点
+      node = parseInterpolation(context);
+    } else if (s[0] === '<') {
+      // 解析元素节点
+      if (/[a-z]/i.test(s[1])) {
+        node = parseElement(context, ancestors);
       }
     }
 
@@ -116,6 +128,76 @@ function parseInterpolation(context: ParserContext): InterpolationNode | undefin
 }
 
 /**
+ * 解析元素节点
+ * @param context
+ * @param ancestors
+ */
+function parseElement(context: ParserContext, ancestors: ElementNode[]): ElementNode | undefined {
+  // 解析开始标签
+  const element = parseTag(context, TagType.Start)!;
+
+  // 如果是单标签（自闭合），直接返回
+  if (element.isSelfClosing) {
+    return element;
+  }
+  // 递归解析孩子标签
+  ancestors.push(element);
+  element.children = parseChildren(context, ancestors);
+  ancestors.pop();
+
+  // 解析闭合标签
+  if (startsWithEndTagOpen(context.source, element.tag)) {
+    parseTag(context, TagType.End);
+  }
+
+  return element;
+}
+
+// 标签类型
+const enum TagType {
+  Start,
+  End
+}
+
+/**
+ * 解析标签
+ * @param context
+ * @param type
+ */
+function parseTag(context: ParserContext, type: TagType): ElementNode | undefined {
+  // 正则识别
+  const match = /^<\/?([a-z][^\t\r\n\f />]*)/i.exec(context.source)!;
+  const tag = match[1];
+
+  // 删除标签文本
+  advanceBy(context, match[0].length);
+
+  // TODO 解析属性
+  let props = [];
+
+  // 判断是否为单标签（自闭合）
+  let isSelfClosing = startsWith(context.source, '/>');
+  advanceBy(context, isSelfClosing ? 2 : 1);
+
+  // 如果是结束标签，无需返回节点
+  if (type === TagType.End) {
+    return;
+  }
+
+  // TODO 判断标签类型
+  let tagType = ElementTypes.ELEMENT;
+
+  return {
+    type: NodeTypes.ELEMENT,
+    tag,
+    tagType,
+    props,
+    isSelfClosing,
+    children: []
+  };
+}
+
+/**
  * 解析文本
  * @param context
  */
@@ -159,8 +241,32 @@ function advanceBy(context: ParserContext, numberOfCharacters: number): void {
 /**
  * 判断是否解析结束
  * @param context
+ * @param ancestors
  */
-function isEnd(context: ParserContext): boolean {
+function isEnd(context: ParserContext, ancestors: ElementNode[]): boolean {
   const s = context.source;
+
+  // 遍历祖先标签，判断是否有未闭合标签
+  if (startsWith(s, '</')) {
+    for (let i = ancestors.length - 1; i >= 0; i--) {
+      if (startsWithEndTagOpen(s, ancestors[i].tag)) {
+        return true;
+      }
+    }
+  }
+
   return !s;
+}
+
+/**
+ * 结束标签
+ * @param source
+ * @param tag
+ */
+function startsWithEndTagOpen(source: string, tag: string): boolean {
+  return (
+    startsWith(source, '</') &&
+    source.slice(2, 2 + tag.length).toLowerCase() === tag.toLowerCase() &&
+    /[\t\r\n\f />]/.test(source[2 + tag.length] || '>')
+  );
 }

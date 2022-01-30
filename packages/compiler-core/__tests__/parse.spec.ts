@@ -1,5 +1,5 @@
 import { baseParse } from 'compiler-core/parse';
-import { NodeTypes } from 'compiler-core/ast';
+import { ElementTypes, NodeTypes } from 'compiler-core/ast';
 
 describe('Parse', () => {
   describe('Text', () => {
@@ -26,14 +26,46 @@ describe('Parse', () => {
     });
   });
 
-  // describe('Element', () => {
-  //   it('simple div', () => {
-  //     const ast = baseParse('<div>HelloWorld</div>');
-  //     expect(ast.children[0]).toStrictEqual({
-  //       type: NodeTypes.ELEMENT,
-  //       tag: 'div',
-  //
-  //     });
-  //   });
-  // });
+  describe('Element', () => {
+    it('simple div', () => {
+      const ast = baseParse('<div>HelloWorld</div>');
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        isSelfClosing: false,
+        tagType: ElementTypes.ELEMENT,
+        props: [],
+        children: [
+          {
+            type: NodeTypes.TEXT,
+            content: 'HelloWorld'
+          }
+        ]
+      });
+    });
+
+    it('empty', () => {
+      const ast = baseParse('<div></div>');
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        isSelfClosing: false,
+        tagType: ElementTypes.ELEMENT,
+        props: [],
+        children: []
+      });
+    });
+
+    it('self closing', () => {
+      const ast = baseParse('<div/>after');
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        isSelfClosing: true,
+        tagType: ElementTypes.ELEMENT,
+        props: [],
+        children: []
+      });
+    });
+  });
 });

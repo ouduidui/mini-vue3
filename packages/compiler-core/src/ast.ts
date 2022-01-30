@@ -1,21 +1,23 @@
 export const enum NodeTypes {
-  ROOT,
-  ELEMENT,
-  TEXT,
+  ROOT, // 根节点
+  ELEMENT, // 元素
+  TEXT, // 文本
   COMMENT,
   SIMPLE_EXPRESSION,
   INTERPOLATION // 插值
 }
 
-export interface Node {
-  type: NodeTypes;
+export const enum ElementTypes {
+  ELEMENT,
+  COMPONENT,
+  SLOT,
+  TEMPLATE
 }
 
-export type ExpressionNode = SimpleExpressionNode;
+export type TemplateChildNode = InterpolationNode | TextNode | ElementNode;
 
-export interface SimpleExpressionNode {
-  type: NodeTypes.SIMPLE_EXPRESSION;
-  content: string;
+export interface Node {
+  type: NodeTypes;
 }
 
 // 文本节点类型
@@ -30,8 +32,30 @@ export interface InterpolationNode extends Node {
   content: ExpressionNode;
 }
 
-export type TemplateChildNode = InterpolationNode | TextNode;
+export type ExpressionNode = SimpleExpressionNode;
 
+export interface SimpleExpressionNode {
+  type: NodeTypes.SIMPLE_EXPRESSION;
+  content: string;
+}
+
+// 元素节点类型
+export type ElementNode = PlainElementNode;
+
+export interface BaseElementNode extends Node {
+  type: NodeTypes.ELEMENT;
+  tag: string;
+  tagType: ElementTypes;
+  isSelfClosing: boolean;
+  props: any[];
+  children: TemplateChildNode[];
+}
+
+export interface PlainElementNode extends BaseElementNode {
+  tagType: ElementTypes.ELEMENT;
+}
+
+// 根节点
 export interface RootNode extends Node {
   type: NodeTypes.ROOT;
   children: TemplateChildNode[];
