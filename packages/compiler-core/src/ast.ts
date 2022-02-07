@@ -4,7 +4,8 @@ export const enum NodeTypes {
   TEXT, // 文本
   COMMENT,
   SIMPLE_EXPRESSION,
-  INTERPOLATION // 插值
+  INTERPOLATION, // 插值
+  ATTRIBUTE // 属性
 }
 
 export const enum ElementTypes {
@@ -53,6 +54,12 @@ export interface BaseElementNode extends Node {
 
 export interface PlainElementNode extends BaseElementNode {
   tagType: ElementTypes.ELEMENT;
+}
+
+export interface AttributeNode extends Node {
+  type: NodeTypes.ATTRIBUTE;
+  name: string;
+  value: TextNode | undefined;
 }
 
 // 根节点

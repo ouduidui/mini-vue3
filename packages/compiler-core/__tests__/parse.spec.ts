@@ -67,5 +67,184 @@ describe('Parse', () => {
         children: []
       });
     });
+
+    it('attribute with no value', () => {
+      const ast = baseParse('<div id></div>');
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        isSelfClosing: false,
+        tagType: ElementTypes.ELEMENT,
+        props: [
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'id',
+            value: undefined
+          }
+        ],
+        children: []
+      });
+    });
+
+    it('attribute with empty value, double quote', () => {
+      const ast = baseParse('<div id=""></div>');
+
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        tagType: ElementTypes.ELEMENT,
+        props: [
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'id',
+            value: {
+              type: NodeTypes.TEXT,
+              content: ''
+            }
+          }
+        ],
+
+        isSelfClosing: false,
+        children: []
+      });
+    });
+
+    it('attribute with empty value, single quote', () => {
+      const ast = baseParse("<div id=''></div>");
+
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+
+        tag: 'div',
+        tagType: ElementTypes.ELEMENT,
+        props: [
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'id',
+            value: {
+              type: NodeTypes.TEXT,
+              content: ''
+            }
+          }
+        ],
+
+        isSelfClosing: false,
+        children: []
+      });
+    });
+
+    it('attribute with value, double quote', () => {
+      const ast = baseParse('<div id=">\'"></div>');
+
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+
+        tag: 'div',
+        tagType: ElementTypes.ELEMENT,
+
+        props: [
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'id',
+            value: {
+              type: NodeTypes.TEXT,
+              content: ">'"
+            }
+          }
+        ],
+
+        isSelfClosing: false,
+        children: []
+      });
+    });
+
+    it('attribute with value, single quote', () => {
+      const ast = baseParse("<div id='>\"'></div>");
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        tagType: ElementTypes.ELEMENT,
+        props: [
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'id',
+            value: {
+              type: NodeTypes.TEXT,
+              content: '>"'
+            }
+          }
+        ],
+
+        isSelfClosing: false,
+        children: []
+      });
+    });
+
+    it('attribute with value, unquoted', () => {
+      const ast = baseParse('<div id=a/></div>');
+
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        tagType: ElementTypes.ELEMENT,
+        props: [
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'id',
+            value: {
+              type: NodeTypes.TEXT,
+              content: 'a/'
+            }
+          }
+        ],
+
+        isSelfClosing: false,
+        children: []
+      });
+    });
+
+    it('multiple attributes', () => {
+      const ast = baseParse('<div id=a class="c" inert style=\'\'></div>');
+
+      expect(ast.children[0]).toStrictEqual({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        tagType: ElementTypes.ELEMENT,
+        props: [
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'id',
+            value: {
+              type: NodeTypes.TEXT,
+              content: 'a'
+            }
+          },
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'class',
+            value: {
+              type: NodeTypes.TEXT,
+              content: 'c'
+            }
+          },
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'inert',
+            value: undefined
+          },
+          {
+            type: NodeTypes.ATTRIBUTE,
+            name: 'style',
+            value: {
+              type: NodeTypes.TEXT,
+              content: ''
+            }
+          }
+        ],
+
+        isSelfClosing: false,
+        children: []
+      });
+    });
   });
 });

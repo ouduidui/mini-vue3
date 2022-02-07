@@ -1,4 +1,5 @@
 import {
+  AttributeNode,
   createRoot,
   ElementNode,
   ElementTypes,
@@ -15,19 +16,16 @@ export const defaultParserOptions = {
   delimiters: [`{{`, `}}`] // 插值分隔符
 };
 
-export const enum TextModes {
-  //               | Elements | Entities | End sign              | Inside of
-  DATA, //    | ✔        | ✔        | End tags of ancestors |
-  RCDATA, //  | ✘        | ✔        | End tag of the parent | <textarea>
-  RAWTEXT, // | ✘        | ✘        | End tag of the parent | <style>,<script>
-  CDATA,
-  ATTRIBUTE_VALUE
-}
-
 export interface ParserContext {
   options: any;
   source: string;
 }
+
+type AttributeValue =
+  | {
+      content: string;
+    }
+  | undefined;
 
 /**
  * 核心函数，解析模板字符串
@@ -112,11 +110,11 @@ function parseInterpolation(context: ParserContext): InterpolationNode | undefin
   // 获取内容长度，包括空格
   const rawContentLength = closeIndex - open.length;
   // 获取内容
-  const rawContent = context.source.slice(0, rawContentLength);
+  const rawContent = parseTextData(context, rawContentLength);
   // 去除空格
   const content = rawContent.trim();
   // 删除剩余部分内容
-  advanceBy(context, rawContentLength + close.length);
+  advanceBy(context, close.length);
 
   return {
     type: NodeTypes.INTERPOLATION,
@@ -171,9 +169,11 @@ function parseTag(context: ParserContext, type: TagType): ElementNode | undefine
 
   // 删除标签文本
   advanceBy(context, match[0].length);
+  // 删除空格
+  advanceSpaces(context);
 
-  // TODO 解析属性
-  let props = [];
+  // 解析属性
+  let props = parseAttributes(context, type);
 
   // 判断是否为单标签（自闭合）
   let isSelfClosing = startsWith(context.source, '/>');
@@ -198,6 +198,99 @@ function parseTag(context: ParserContext, type: TagType): ElementNode | undefine
 }
 
 /**
+ * 解析元素属性
+ * @param context
+ * @param type
+ */
+function parseAttributes(context: ParserContext, type: TagType): AttributeNode[] {
+  const props: AttributeNode[] = [];
+
+  // 遍历
+  while (context.source.length > 0 && !startsWith(context.source, '>') && !startsWith(context.source, '/>')) {
+    // 解析单个属性
+    const attr = parseAttribute(context);
+
+    // 插入props变量中
+    if (type === TagType.Start) {
+      props.push(attr);
+    }
+
+    // 删除空格
+    advanceSpaces(context);
+  }
+
+  return props;
+}
+
+/**
+ * 解析当个属性
+ * @param context
+ */
+function parseAttribute(context: ParserContext): AttributeNode {
+  const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)!;
+  const name = match[0];
+
+  // 删除属性名
+  advanceBy(context, name.length);
+
+  let value: any = undefined;
+
+  if (/^[\t\r\n\f ]*=/.test(context.source)) {
+    // 删除等于号
+    advanceBy(context, 1);
+    // 解析属性值
+    value = parseAttributeValue(context);
+  }
+  return {
+    type: NodeTypes.ATTRIBUTE,
+    name,
+    value: value && {
+      type: NodeTypes.TEXT,
+      content: value.content
+    }
+  };
+}
+
+/**
+ * 解析属性值
+ * @param context
+ */
+function parseAttributeValue(context: ParserContext): AttributeValue {
+  let content: string;
+  // 判断属性是否有引号
+  const quote = context.source[0];
+  const isQuoted = quote === `"` || quote === `'`;
+  if (isQuoted) {
+    // 删除引号
+    advanceBy(context, 1);
+
+    // 定位下一个引号，获取内容
+    const endIndex = context.source.indexOf(quote);
+
+    if (endIndex === -1) {
+      content = parseTextData(context, context.source.length);
+    } else {
+      // 获取内容
+      content = parseTextData(context, endIndex);
+      // 删除结束引号
+      advanceBy(context, 1);
+    }
+  } else {
+    // 属性值没有加引号的情况
+    const match = /^[^\t\r\n\f >]+/.exec(context.source);
+    if (!match) {
+      return undefined;
+    }
+    // 获取内容
+    content = parseTextData(context, match[0].length);
+  }
+
+  return {
+    content
+  };
+}
+
+/**
  * 解析文本
  * @param context
  */
@@ -214,9 +307,7 @@ function parseText(context: ParserContext): TextNode {
   }
 
   // 解析出文本
-  const content = context.source.slice(0, endIndex);
-  // 删除原文本
-  advanceBy(context, endIndex);
+  const content = parseTextData(context, endIndex);
 
   return {
     type: NodeTypes.TEXT,
@@ -269,4 +360,28 @@ function startsWithEndTagOpen(source: string, tag: string): boolean {
     source.slice(2, 2 + tag.length).toLowerCase() === tag.toLowerCase() &&
     /[\t\r\n\f />]/.test(source[2 + tag.length] || '>')
   );
+}
+
+/**
+ * 解析文本内容
+ * @param context
+ * @param length
+ */
+function parseTextData(context: ParserContext, length: number) {
+  // 截取文本原内容
+  const rawText = context.source.slice(0, length);
+  // 删除数据
+  advanceBy(context, length);
+  return rawText;
+}
+
+/**
+ * 删除空格
+ * @param context
+ */
+function advanceSpaces(context: ParserContext): void {
+  const match = /^[\t\r\n\f ]+/.exec(context.source);
+  if (match) {
+    advanceBy(context, match[0].length);
+  }
 }
