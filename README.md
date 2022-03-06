@@ -15,5 +15,5 @@ pnpm test:mini-vue3
 - [x] reactive
 - [x] runtime-core
 - [x] runtime-dom
-- [] complier-core
-- [] complier-dom
+- [ ] complier-core
+- [ ] complier-dom
