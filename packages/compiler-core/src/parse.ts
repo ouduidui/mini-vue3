@@ -17,9 +17,11 @@ export const defaultParserOptions = {
 };
 
 export interface ParserContext {
-  options: any;
+  options: ParserOptions;
   source: string;
 }
+
+export type ParserOptions = any;
 
 type AttributeValue =
   | {
@@ -31,8 +33,8 @@ type AttributeValue =
  * 核心函数，解析模板字符串
  * @param content
  */
-export function baseParse(content: string): RootNode {
-  const context = createParserContext(content); // 创建一个解析上下文
+export function baseParse(content: string, options: ParserOptions = {}): RootNode {
+  const context = createParserContext(content, options); // 创建一个解析上下文
   // 创建一个根AST
   return createRoot(parseChildren(context, []) /* 解析孩子内容 */);
 }
@@ -41,9 +43,9 @@ export function baseParse(content: string): RootNode {
  * 初始化配置
  * @param content
  */
-function createParserContext(content: string): ParserContext {
+function createParserContext(content: string, rawOptions: ParserOptions): ParserContext {
   // 初始化配置
-  const options = defaultParserOptions;
+  const options = { ...rawOptions, ...defaultParserOptions };
   return {
     options,
     source: content // 将模板字符串保存在source里
@@ -76,6 +78,7 @@ function parseChildren(context: ParserContext, ancestors: ElementNode[]): Templa
       }
     }
 
+    // 解析文本
     if (!node) {
       node = parseText(context);
     }
@@ -184,8 +187,15 @@ function parseTag(context: ParserContext, type: TagType): ElementNode | undefine
     return;
   }
 
-  // TODO 判断标签类型
+  // 判断标签类型
   let tagType = ElementTypes.ELEMENT;
+  if (tag === 'slot') {
+    tagType = ElementTypes.SLOT;
+  } else if (tag === 'template') {
+    tagType = ElementTypes.TEMPLATE;
+  } else if (isComponent(tag, props, context)) {
+    tagType = ElementTypes.COMPONENT;
+  }
 
   return {
     type: NodeTypes.ELEMENT,
@@ -195,6 +205,22 @@ function parseTag(context: ParserContext, type: TagType): ElementNode | undefine
     isSelfClosing,
     children: []
   };
+}
+
+function isComponent(tag: string, props: AttributeNode[], context: ParserContext) {
+  const options = context.options;
+  if (tag === 'component' || /^[A-Z]/.test(tag) || (options.isNativeTag && !options.isNativeTag(tag))) {
+    return true;
+  }
+
+  for (let i = 0; i < props.length; i++) {
+    const p = props[i];
+    if (p.type === NodeTypes.ATTRIBUTE) {
+      if (p.name === 'is' && p.value) {
+        return true;
+      }
+    }
+  }
 }
 
 /**

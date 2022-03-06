@@ -41,7 +41,7 @@ export interface SimpleExpressionNode {
 }
 
 // 元素节点类型
-export type ElementNode = PlainElementNode;
+export type ElementNode = PlainElementNode | ComponentNode | TemplateNode | SlotOutletNode;
 
 export interface BaseElementNode extends Node {
   type: NodeTypes.ELEMENT;
@@ -54,6 +54,18 @@ export interface BaseElementNode extends Node {
 
 export interface PlainElementNode extends BaseElementNode {
   tagType: ElementTypes.ELEMENT;
+}
+
+export interface ComponentNode extends BaseElementNode {
+  tagType: ElementTypes.COMPONENT;
+}
+
+export interface TemplateNode extends BaseElementNode {
+  tagType: ElementTypes.TEMPLATE;
+}
+
+export interface SlotOutletNode extends BaseElementNode {
+  tagType: ElementTypes.SLOT;
 }
 
 export interface AttributeNode extends Node {

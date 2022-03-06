@@ -246,5 +246,38 @@ describe('Parse', () => {
         children: []
       });
     });
+
+    it('template element', () => {
+      const ast = baseParse('<template></template>');
+      expect(ast.children[0]).toMatchObject({
+        type: NodeTypes.ELEMENT,
+        tag: 'template',
+        tagType: ElementTypes.TEMPLATE
+      });
+    });
+
+    it('native element with `isNativeTag`', () => {
+      const ast = baseParse('<div></div><comp></comp><Comp></Comp>', {
+        isNativeTag: (tag) => tag === 'div'
+      });
+
+      expect(ast.children[0]).toMatchObject({
+        type: NodeTypes.ELEMENT,
+        tag: 'div',
+        tagType: ElementTypes.ELEMENT
+      });
+
+      expect(ast.children[1]).toMatchObject({
+        type: NodeTypes.ELEMENT,
+        tag: 'comp',
+        tagType: ElementTypes.COMPONENT
+      });
+
+      expect(ast.children[2]).toMatchObject({
+        type: NodeTypes.ELEMENT,
+        tag: 'Comp',
+        tagType: ElementTypes.COMPONENT
+      });
+    });
   });
 });
