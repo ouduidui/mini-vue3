@@ -7,7 +7,7 @@
     "test:mini-vue3": "jest --watch",
     "example:mini-vue3": "live-server packages/vue",
     "build:mini-vue3": "rollup -c -w --sourcemap rollup.config.js",
-    "dev:mini-vue3": "yarn build:mini-vue3 & yarn example:mini-vue3"
+    "dev:mini-vue3": "pnpm build:mini-vue3 & pnpm example:mini-vue3"
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",
