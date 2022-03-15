@@ -1,43 +1,43 @@
-import { Component, ComponentInternalInstance, Data } from 'runtime-core/component';
-import { Ref } from 'reactivity/ref';
-import { RendererNode, RendererElement } from './renderer';
-import { isObject, isString, ShapeFlags } from 'shared/index';
+import type { Component, ComponentInternalInstance, Data } from 'runtime-core/component'
+import type { Ref } from 'reactivity/ref'
+import { ShapeFlags, isObject, isString } from 'shared/index'
+import type { RendererElement, RendererNode } from './renderer'
 
-export const Fragment = Symbol('Fragment');
-export const Text = Symbol('Text');
+export const Fragment = Symbol('Fragment')
+export const Text = Symbol('Text')
 
-export type VNodeTypes = string | VNode | Component;
+export type VNodeTypes = string | VNode | Component
 
-export type VNodeRef = string | Ref;
+export type VNodeRef = string | Ref
 
-export type VNodeProps = {
-  key?: string | number | symbol;
-  ref?: VNodeRef;
-};
+export interface VNodeProps {
+  key?: string | number | symbol
+  ref?: VNodeRef
+}
 
-export interface VNode<HostNode = RendererNode, HostElement = RendererElement, ExtraProps = { [key: string]: any }> {
-  type: VNodeTypes;
-  props: VNodeProps | null;
-  children: VNodeNormalizedChildren;
-  key: string | number | symbol | null;
+export interface VNode<HostNode = RendererNode, HostElement = RendererElement, ExtraProps = Record<string, any>> {
+  type: VNodeTypes
+  props: VNodeProps | null
+  children: VNodeNormalizedChildren
+  key: string | number | symbol | null
 
   // Component
-  component: ComponentInternalInstance | null;
+  component: ComponentInternalInstance | null
 
   // DOM
-  el: HostNode | null;
+  el: HostNode | null
 
-  shapeFlag: number;
+  shapeFlag: number
   // patchFlag: number
 }
 
-type VNodeChildAtom = VNode | string | number | boolean | null | undefined | void;
+type VNodeChildAtom = VNode | string | number | boolean | null | undefined | void
 
-export type VNodeArrayChildren = Array<VNodeChild>;
+export type VNodeArrayChildren = Array<VNodeChild>
 
-export type VNodeChild = VNodeChildAtom | VNodeArrayChildren;
+export type VNodeChild = VNodeChildAtom | VNodeArrayChildren
 
-export type VNodeNormalizedChildren = string | VNodeArrayChildren | null;
+export type VNodeNormalizedChildren = string | VNodeArrayChildren | null
 
 /**
  * 创建vnode
@@ -48,14 +48,14 @@ export type VNodeNormalizedChildren = string | VNodeArrayChildren | null;
 export function createVNode(
   type: VNodeTypes,
   props: (Data & VNodeProps) | null = null,
-  children: unknown = null
+  children: unknown = null,
 ): VNode {
-  const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : ShapeFlags.COMPONENT;
+  const shapeFlag = isString(type) ? ShapeFlags.ELEMENT : ShapeFlags.COMPONENT
 
-  return createBaseVNode(type, props, children, 0, null, shapeFlag);
+  return createBaseVNode(type, props, children, 0, null, shapeFlag)
 }
 
-const normalizeKey = ({ key }: VNodeProps): VNode['key'] => (key != null ? key : null);
+const normalizeKey = ({ key }: VNodeProps): VNode['key'] => (key != null ? key : null)
 
 function createBaseVNode(
   type: VNodeTypes,
@@ -63,7 +63,7 @@ function createBaseVNode(
   children: unknown = null,
   patchFlag = 0,
   dynamicProps: string[] | null = null,
-  shapeFlag = 0
+  shapeFlag = 0,
 ): VNode {
   const vnode = {
     type,
@@ -72,25 +72,24 @@ function createBaseVNode(
     shapeFlag,
     component: null,
     el: null,
-    key: props && normalizeKey(props)
-  } as VNode;
+    key: props && normalizeKey(props),
+  } as VNode
 
   if (children) {
     // |= 按位运算符
-    vnode.shapeFlag |= isString(children) ? ShapeFlags.TEXT_CHILDREN : ShapeFlags.ARRAY_CHILDREN;
+    vnode.shapeFlag |= isString(children) ? ShapeFlags.TEXT_CHILDREN : ShapeFlags.ARRAY_CHILDREN
 
-    if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT && isObject(children)) {
-      vnode.shapeFlag |= ShapeFlags.SLOTS_CHILDREN;
-    }
+    if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT && isObject(children))
+      vnode.shapeFlag |= ShapeFlags.SLOTS_CHILDREN
   }
 
-  return vnode;
+  return vnode
 }
 
-export function createTextVNode(text: string = ' ') {
-  return createVNode(Text, {}, text);
+export function createTextVNode(text = ' ') {
+  return createVNode(Text, {}, text)
 }
 
 export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
-  return n1.type === n2.type && n1.key === n2.key;
+  return n1.type === n2.type && n1.key === n2.key
 }

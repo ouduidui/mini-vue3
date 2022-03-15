@@ -1,9 +1,9 @@
-import { mutableHandlers, readonlyHandlers, shallowReactiveHandlers, shallowReadonlyHandlers } from './baseHandlers';
-import { isObject } from 'shared/index';
+import { isObject } from 'shared/index'
+import { mutableHandlers, readonlyHandlers, shallowReactiveHandlers, shallowReadonlyHandlers } from './baseHandlers'
 
 export const enum ReactiveFlags {
   IS_REACTIVE = '__v_isReactive',
-  IS_READONLY = '__v_isReadonly'
+  IS_READONLY = '__v_isReadonly',
 }
 
 /**
@@ -11,7 +11,7 @@ export const enum ReactiveFlags {
  * @param target
  */
 export function reactive<T extends object>(target: T) {
-  return createReactiveObject(target, mutableHandlers);
+  return createReactiveObject(target, mutableHandlers)
 }
 
 /**
@@ -19,7 +19,7 @@ export function reactive<T extends object>(target: T) {
  * @param target
  */
 export function shallowReactive<T extends object>(target: T) {
-  return createReactiveObject(target, shallowReactiveHandlers);
+  return createReactiveObject(target, shallowReactiveHandlers)
 }
 
 /**
@@ -27,7 +27,7 @@ export function shallowReactive<T extends object>(target: T) {
  * @param target
  */
 export function readonly<T extends object>(target: T) {
-  return createReactiveObject(target, readonlyHandlers);
+  return createReactiveObject(target, readonlyHandlers)
 }
 
 /**
@@ -35,7 +35,7 @@ export function readonly<T extends object>(target: T) {
  * @param target
  */
 export function shallowReadonly<T extends object>(target: T) {
-  return createReactiveObject(target, shallowReadonlyHandlers);
+  return createReactiveObject(target, shallowReadonlyHandlers)
 }
 
 /**
@@ -44,7 +44,7 @@ export function shallowReadonly<T extends object>(target: T) {
  * @param baseHandlers proxy处理器
  */
 function createReactiveObject(target: object, baseHandlers: ProxyHandler<any>) {
-  return new Proxy(target, baseHandlers);
+  return new Proxy(target, baseHandlers)
 }
 
 /**
@@ -52,7 +52,7 @@ function createReactiveObject(target: object, baseHandlers: ProxyHandler<any>) {
  * @param value
  */
 export function isReactive(value: any): boolean {
-  return !!(value && value[ReactiveFlags.IS_REACTIVE]);
+  return !!(value && value[ReactiveFlags.IS_REACTIVE])
 }
 
 /**
@@ -60,7 +60,7 @@ export function isReactive(value: any): boolean {
  * @param value
  */
 export function isReadonly(value: any): boolean {
-  return !!(value && value[ReactiveFlags.IS_READONLY]);
+  return !!(value && value[ReactiveFlags.IS_READONLY])
 }
 
 /**
@@ -68,11 +68,11 @@ export function isReadonly(value: any): boolean {
  * @param value
  */
 export function isProxy(value: any): boolean {
-  return isReactive(value) || isReadonly(value);
+  return isReactive(value) || isReadonly(value)
 }
 
 /**
  * 判断是否为对象，是的话进行响应式处理
  * @param value
  */
-export const toReactive = <T extends unknown>(value: T): T => (isObject(value) ? reactive(value) : value);
+export const toReactive = <T>(value: T): T => (isObject(value) ? reactive(value) : value)

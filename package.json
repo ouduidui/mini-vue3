@@ -1,13 +1,15 @@
 {
   "name": "mini-vue3",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "test": "jest --watch",
     "example": "live-server packages/vue",
     "build": "rollup -c -w --sourcemap rollup.config.js",
-    "dev": "pnpm build:mini-vue3 & pnpm example:mini-vue3"
+    "dev": "pnpm build & pnpm example",
+    "format": "eslint \"**/*.{vue,ts,js}\" --fix",
+    "lint": "eslint \"**/*.{vue,ts,js}\""
   },
   "devDependencies": {
     "@babel/core": "^7.16.0",

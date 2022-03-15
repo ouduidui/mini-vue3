@@ -1,8 +1,8 @@
-import { h, ref } from '../../dist/mini-vue.esm.js';
-import ArrayToText from './ArrayToText.js';
-import TextToText from './TextToText.js';
-import TextToArray from './TextToArray.js';
-import generateArrayTpArrayComps from './ArrayToArray.js';
+import { h, ref } from '../../dist/mini-vue.esm.js'
+import ArrayToText from './ArrayToText.js'
+import TextToText from './TextToText.js'
+import TextToArray from './TextToArray.js'
+import generateArrayTpArrayComps from './ArrayToArray.js'
 
 export const App = {
   render() {
@@ -33,17 +33,17 @@ export const App = {
       h(
         'button',
         {
-          onClick: this.changeHandle
+          onClick: this.changeHandle,
         },
-        'update'
-      )
-    ]);
+        'update',
+      ),
+    ])
   },
   setup() {
-    const isChange = ref(false);
+    const isChange = ref(false)
 
-    const changeHandle = () => (isChange.value = true);
+    const changeHandle = () => (isChange.value = true)
 
-    return { isChange, changeHandle };
-  }
-};
+    return { isChange, changeHandle }
+  },
+}

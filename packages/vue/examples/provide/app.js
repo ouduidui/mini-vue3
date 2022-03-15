@@ -1,15 +1,15 @@
-import { h, provide, getCurrentInstance } from '../../dist/mini-vue.esm.js';
-import { Foo } from './foo.js';
+import { getCurrentInstance, h, provide } from '../../dist/mini-vue.esm.js'
+import { Foo } from './foo.js'
 
 export const App = {
   render() {
-    return h('div', { id: 'root' }, [h('h1', null, 'Components'), h(Foo)]);
+    return h('div', { id: 'root' }, [h('h1', null, 'Components'), h(Foo)])
   },
   setup() {
-    const instance = getCurrentInstance();
-    console.log('app Instance: ', instance);
+    const instance = getCurrentInstance()
+    console.log('app Instance: ', instance)
 
-    provide('foo', 'fooVal');
-    provide('baz', 'bazVal');
-  }
-};
+    provide('foo', 'fooVal')
+    provide('baz', 'bazVal')
+  },
+}

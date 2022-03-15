@@ -1,23 +1,23 @@
-import { h, ref } from '../../dist/mini-vue.esm.js';
+import { h, ref } from '../../dist/mini-vue.esm.js'
 
 export const App = {
   render() {
-    console.log(this.props);
+    console.log(this.props)
     return h(
       'div',
       {
-        ...this.props
+        ...this.props,
       },
       [
         h('h1', null, 'Update'),
         h('h3', null, 'Update Children'),
-        h('p', null, 'count: ' + this.count),
+        h('p', null, `count: ${this.count}`),
         h(
           'button',
           {
-            onClick: this.addHandle
+            onClick: this.addHandle,
           },
-          'add'
+          'add',
         ),
 
         h('h3', null, 'Update Props'),
@@ -25,42 +25,42 @@ export const App = {
         h(
           'button',
           {
-            onClick: this.changePropsStyle
+            onClick: this.changePropsStyle,
           },
-          'changePropsStyle'
+          'changePropsStyle',
         ),
         h(
           'button',
           {
-            onClick: this.clearPropsClass
+            onClick: this.clearPropsClass,
           },
-          'clearPropsClass'
+          'clearPropsClass',
         ),
         h(
           'button',
           {
-            onClick: this.resetProps
+            onClick: this.resetProps,
           },
-          'resetProps'
-        )
-      ]
-    );
+          'resetProps',
+        ),
+      ],
+    )
   },
   setup() {
-    const count = ref(0);
+    const count = ref(0)
     const addHandle = () => {
-      count.value++;
-      console.log('count: ' + count.value);
-    };
+      count.value++
+      console.log(`count: ${count.value}`)
+    }
 
     const props = ref({
       style: 'color: red',
-      class: 'underline'
-    });
+      class: 'underline',
+    })
 
-    const changePropsStyle = () => (props.value.style = 'color: blue');
-    const clearPropsClass = () => (props.value.class = undefined);
-    const resetProps = () => (props.value = { style: 'color: red' });
+    const changePropsStyle = () => (props.value.style = 'color: blue')
+    const clearPropsClass = () => (props.value.class = undefined)
+    const resetProps = () => (props.value = { style: 'color: red' })
 
     return {
       count,
@@ -68,7 +68,7 @@ export const App = {
       addHandle,
       changePropsStyle,
       clearPropsClass,
-      resetProps
-    };
-  }
-};
+      resetProps,
+    }
+  },
+}

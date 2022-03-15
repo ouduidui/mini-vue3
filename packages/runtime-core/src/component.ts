@@ -1,57 +1,59 @@
-import { VNode } from 'runtime-core/vnode';
-import { EMPTY_OBJ, isFunction, isObject } from 'shared/index';
-import { proxyRefs } from 'reactivity/ref';
-import { PublicInstanceProxyHandlers } from 'runtime-core/componentPublicInstance';
-import { initProps } from 'runtime-core/componentProps';
-import { shallowReadonly } from 'reactivity/reactive';
-import { emit, EmitFn } from 'runtime-core/componentEmit';
-import { initSlots, InternalSlots } from 'runtime-core/componentSlots';
+import type { VNode } from 'runtime-core/vnode'
+import { EMPTY_OBJ, isFunction, isObject } from 'shared/index'
+import { proxyRefs } from 'reactivity/ref'
+import { PublicInstanceProxyHandlers } from 'runtime-core/componentPublicInstance'
+import { initProps } from 'runtime-core/componentProps'
+import { shallowReadonly } from 'reactivity/reactive'
+import type { EmitFn } from 'runtime-core/componentEmit'
+import { emit } from 'runtime-core/componentEmit'
+import type { InternalSlots } from 'runtime-core/componentSlots'
+import { initSlots } from 'runtime-core/componentSlots'
 
-export type Component = any;
+export type Component = any
 
-export type Data = Record<string, unknown>;
+export type Data = Record<string, unknown>
 
 export interface ComponentInternalInstance {
-  vnode: VNode;
-  type: any;
-  parent: ComponentInternalInstance | null;
-  next: VNode | null;
-  subTree: VNode;
-  update: any;
-  render: any;
+  vnode: VNode
+  type: any
+  parent: ComponentInternalInstance | null
+  next: VNode | null
+  subTree: VNode
+  update: any
+  render: any
   proxy: any; // 代理this
-  ctx: Data;
-  provides: Data;
+  ctx: Data
+  provides: Data
   // state
-  setupState: Data;
-  props: Data;
-  slots: InternalSlots;
-  emit: EmitFn;
+  setupState: Data
+  props: Data
+  slots: InternalSlots
+  emit: EmitFn
 
   // lifecycle
-  isMounted: boolean;
-  [LifecycleHooks.BEFORE_MOUNT]: LifecycleHook;
-  [LifecycleHooks.MOUNTED]: LifecycleHook;
-  [LifecycleHooks.BEFORE_UPDATE]: LifecycleHook;
-  [LifecycleHooks.UPDATED]: LifecycleHook;
+  isMounted: boolean
+  [LifecycleHooks.BEFORE_MOUNT]: LifecycleHook
+  [LifecycleHooks.MOUNTED]: LifecycleHook
+  [LifecycleHooks.BEFORE_UPDATE]: LifecycleHook
+  [LifecycleHooks.UPDATED]: LifecycleHook
 }
 
-type LifecycleHook<TFn = Function> = TFn[] | null;
+type LifecycleHook<TFn = Function> = TFn[] | null
 
 export const enum LifecycleHooks {
   BEFORE_MOUNT = 'bm',
   MOUNTED = 'm',
   BEFORE_UPDATE = 'bu',
-  UPDATED = 'u'
+  UPDATED = 'u',
 }
 
-export let currentInstance: ComponentInternalInstance | null = null;
+export let currentInstance: ComponentInternalInstance | null = null
 
-export const getCurrentInstance = (): ComponentInternalInstance | null => currentInstance;
+export const getCurrentInstance = (): ComponentInternalInstance | null => currentInstance
 
-export const setCurrentInstance = (instance: ComponentInternalInstance) => (currentInstance = instance);
+export const setCurrentInstance = (instance: ComponentInternalInstance) => (currentInstance = instance)
 
-export const unsetCurrentInstance = () => (currentInstance = null);
+export const unsetCurrentInstance = () => (currentInstance = null)
 
 /**
  * 创建组件实例
@@ -60,7 +62,7 @@ export const unsetCurrentInstance = () => (currentInstance = null);
  */
 export function createComponentInstance(
   vnode: VNode,
-  parent: ComponentInternalInstance | null
+  parent: ComponentInternalInstance | null,
 ): ComponentInternalInstance {
   const instance: ComponentInternalInstance = {
     vnode,
@@ -81,12 +83,12 @@ export function createComponentInstance(
     bm: null,
     m: null,
     bu: null,
-    u: null
-  };
+    u: null,
+  }
 
-  instance.ctx = { _: instance };
-  instance.emit = emit.bind(null, instance);
-  return instance;
+  instance.ctx = { _: instance }
+  instance.emit = emit.bind(null, instance)
+  return instance
 }
 
 /**
@@ -94,15 +96,15 @@ export function createComponentInstance(
  * @param instance
  */
 export function setupComponent(instance: ComponentInternalInstance) {
-  const { props, children } = instance.vnode;
+  const { props, children } = instance.vnode
   // 初始化属性
-  initProps(instance, props);
+  initProps(instance, props)
 
   // 初始化插槽
-  initSlots(instance, children);
+  initSlots(instance, children)
 
   // 处理成有状态的组件
-  setupStatefulComponent(instance);
+  setupStatefulComponent(instance)
 }
 
 /**
@@ -110,23 +112,23 @@ export function setupComponent(instance: ComponentInternalInstance) {
  * @param instance
  */
 function setupStatefulComponent(instance: ComponentInternalInstance) {
-  const Component = instance.type;
-  const { setup } = Component;
+  const Component = instance.type
+  const { setup } = Component
 
   // 初始化组件代理
-  instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers);
+  instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers)
   if (setup) {
     // 处理setup钩子
-    setCurrentInstance(instance);
+    setCurrentInstance(instance)
 
     const setupResult = setup(shallowReadonly(instance.props), {
-      emit: instance.emit
-    });
+      emit: instance.emit,
+    })
 
-    unsetCurrentInstance();
+    unsetCurrentInstance()
 
     // 处理setup返回值
-    handleSetupResult(instance, setupResult);
+    handleSetupResult(instance, setupResult)
   }
 }
 
@@ -138,13 +140,14 @@ function setupStatefulComponent(instance: ComponentInternalInstance) {
 function handleSetupResult(instance: ComponentInternalInstance, setupResult: unknown) {
   if (isFunction(setupResult)) {
     // TODO function
-  } else if (isObject(setupResult)) {
+  }
+  else if (isObject(setupResult)) {
     // 将setupResult响应式，并赋值给实例
-    instance.setupState = proxyRefs(setupResult);
+    instance.setupState = proxyRefs(setupResult)
   }
 
   // 当组件状态化后，实现render函数
-  finishComponentSetup(instance);
+  finishComponentSetup(instance)
 }
 
 /**
@@ -152,9 +155,8 @@ function handleSetupResult(instance: ComponentInternalInstance, setupResult: unk
  * @param instance
  */
 function finishComponentSetup(instance: ComponentInternalInstance) {
-  const Component = instance.type;
+  const Component = instance.type
 
-  if (Component.render) {
-    instance.render = Component.render;
-  }
+  if (Component.render)
+    instance.render = Component.render
 }

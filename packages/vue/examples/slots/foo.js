@@ -1,4 +1,4 @@
-import { h, renderSlot } from '../../dist/mini-vue.esm.js';
+import { h, renderSlot } from '../../dist/mini-vue.esm.js'
 
 export const Foo = {
   render() {
@@ -6,8 +6,8 @@ export const Foo = {
       // 插槽
       renderSlot(this.$slots, 'header'),
       renderSlot(this.$slots, 'default', { msg: 'HelloWorld' }),
-      renderSlot(this.$slots, 'footer')
-    ]);
+      renderSlot(this.$slots, 'footer'),
+    ])
   },
-  setup() {}
-};
+  setup() {},
+}

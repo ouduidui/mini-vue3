@@ -1,3 +1,6 @@
 {
-  "extends": ["@ouduidui/eslint-config-ts"]
+  "extends": ["@ouduidui/eslint-config-ts"],
+  "rules": {
+    "no-use-before-define": "off"
+  }
 }

@@ -1,3 +1,3 @@
-import { RootNode } from './ast';
+import type { RootNode } from './ast'
 
 export function generate(ast: RootNode, options: any) {}

@@ -1,15 +1,15 @@
-import { h } from '../../dist/mini-vue.esm.js';
+import { h } from '../../dist/mini-vue.esm.js'
 
-window.self = null;
+window.self = null
 
 export const App = {
   render() {
-    window.self = this;
+    window.self = this
     return h(
       'div',
       {
         id: 'root',
-        class: ['pages']
+        class: ['pages'],
       },
       [
         h('h1', { class: 'text-1' }, 'Hello World'),
@@ -17,24 +17,24 @@ export const App = {
         h('input', {
           placeholder: 'input something',
           onInput(e) {
-            console.log('input keywords: ', e.target.value);
-          }
+            console.log('input keywords: ', e.target.value)
+          },
         }),
         h(
           'button',
           {
             onClick() {
-              console.log('click events');
-            }
+              console.log('click events')
+            },
           },
-          'test button'
-        )
-      ]
-    );
+          'test button',
+        ),
+      ],
+    )
   },
   setup() {
     return {
-      msg: 'This is mini-vue'
-    };
-  }
-};
+      msg: 'This is mini-vue',
+    }
+  },
+}
