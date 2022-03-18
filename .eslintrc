@@ -1,6 +1,9 @@
 {
   "extends": ["@ouduidui/eslint-config-ts"],
-  "rules": {
-    "no-use-before-define": "off"
-  }
+   "rules": {
+     "@typescript-eslint/no-use-before-define": [
+      "error",
+      { "functions": false, "classes": false, "variables": true }
+    ]
+   }
 }

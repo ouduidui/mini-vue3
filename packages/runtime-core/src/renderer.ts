@@ -26,8 +26,6 @@ export interface RendererOptions<HostNode = RendererNode, HostElement = Renderer
   setElementText(node: HostElement, text: string): void
 }
 
-export interface RendererElement extends RendererNode {}
-
 type PatchFn = (
   n1: VNode | null,
   n2: VNode,
