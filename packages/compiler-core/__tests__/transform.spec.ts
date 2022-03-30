@@ -18,3 +18,39 @@ describe('transform', () => {
     expect(nodeText.content).toBe('Hello World')
   })
 })
+
+describe('codegenNode', () => {
+  it('string', () => {
+    const ast = baseParse('HelloWorld')
+    transform(ast, {})
+    expect(ast.codegenNode).toStrictEqual({
+      content: 'HelloWorld',
+      type: 2,
+    })
+  })
+
+  it('interpolation', () => {
+    const ast = baseParse('<div>Hello {{message}}</div>')
+    transform(ast, {})
+    expect(ast.codegenNode).toStrictEqual({
+      children: [
+        {
+          content: 'Hello ',
+          type: 2,
+        },
+        {
+          content: {
+            content: 'message',
+            type: 4,
+          },
+          type: 5,
+        },
+      ],
+      isSelfClosing: false,
+      props: [],
+      tag: 'div',
+      tagType: 0,
+      type: 1,
+    })
+  })
+})
