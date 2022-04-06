@@ -34,6 +34,7 @@ describe('Parse', () => {
         tag: 'div',
         isSelfClosing: false,
         tagType: ElementTypes.ELEMENT,
+        codegenNode: undefined,
         props: [],
         children: [
           {
@@ -47,6 +48,7 @@ describe('Parse', () => {
     it('empty', () => {
       const ast = baseParse('<div></div>')
       expect(ast.children[0]).toStrictEqual({
+        codegenNode: undefined,
         type: NodeTypes.ELEMENT,
         tag: 'div',
         isSelfClosing: false,
@@ -59,6 +61,7 @@ describe('Parse', () => {
     it('self closing', () => {
       const ast = baseParse('<div/>after')
       expect(ast.children[0]).toStrictEqual({
+        codegenNode: undefined,
         type: NodeTypes.ELEMENT,
         tag: 'div',
         isSelfClosing: true,
@@ -72,6 +75,7 @@ describe('Parse', () => {
       const ast = baseParse('<div id></div>')
       expect(ast.children[0]).toStrictEqual({
         type: NodeTypes.ELEMENT,
+        codegenNode: undefined,
         tag: 'div',
         isSelfClosing: false,
         tagType: ElementTypes.ELEMENT,
@@ -93,6 +97,7 @@ describe('Parse', () => {
         type: NodeTypes.ELEMENT,
         tag: 'div',
         tagType: ElementTypes.ELEMENT,
+        codegenNode: undefined,
         props: [
           {
             type: NodeTypes.ATTRIBUTE,
@@ -114,7 +119,7 @@ describe('Parse', () => {
 
       expect(ast.children[0]).toStrictEqual({
         type: NodeTypes.ELEMENT,
-
+        codegenNode: undefined,
         tag: 'div',
         tagType: ElementTypes.ELEMENT,
         props: [
@@ -137,8 +142,8 @@ describe('Parse', () => {
       const ast = baseParse('<div id=">\'"></div>')
 
       expect(ast.children[0]).toStrictEqual({
+        codegenNode: undefined,
         type: NodeTypes.ELEMENT,
-
         tag: 'div',
         tagType: ElementTypes.ELEMENT,
 
@@ -161,6 +166,7 @@ describe('Parse', () => {
     it('attribute with value, single quote', () => {
       const ast = baseParse('<div id=\'>"\'></div>')
       expect(ast.children[0]).toStrictEqual({
+        codegenNode: undefined,
         type: NodeTypes.ELEMENT,
         tag: 'div',
         tagType: ElementTypes.ELEMENT,
@@ -187,6 +193,7 @@ describe('Parse', () => {
         type: NodeTypes.ELEMENT,
         tag: 'div',
         tagType: ElementTypes.ELEMENT,
+        codegenNode: undefined,
         props: [
           {
             type: NodeTypes.ATTRIBUTE,
@@ -210,6 +217,7 @@ describe('Parse', () => {
         type: NodeTypes.ELEMENT,
         tag: 'div',
         tagType: ElementTypes.ELEMENT,
+        codegenNode: undefined,
         props: [
           {
             type: NodeTypes.ATTRIBUTE,

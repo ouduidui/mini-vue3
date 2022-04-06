@@ -51,6 +51,7 @@ describe('codegenNode', () => {
       tag: 'div',
       tagType: 0,
       type: 1,
+      codegenNode: undefined,
     })
   })
 })

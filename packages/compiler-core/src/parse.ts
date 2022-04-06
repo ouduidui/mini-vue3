@@ -202,7 +202,8 @@ function parseTag(context: ParserContext, type: TagType): ElementNode | undefine
     props,
     isSelfClosing,
     children: [],
-  }
+    codegenNode: undefined,
+  } as ElementNode
 }
 
 function isComponent(tag: string, props: AttributeNode[], context: ParserContext) {

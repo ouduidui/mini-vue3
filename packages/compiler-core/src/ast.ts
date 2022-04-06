@@ -20,6 +20,10 @@ export const enum ElementTypes {
   TEMPLATE,
 }
 
+export type JSChildNode =
+  | VNodeCall
+  | ExpressionNode
+
 export type TemplateChildNode = InterpolationNode | TextNode | ElementNode
 
 export interface Node {
@@ -59,12 +63,12 @@ export interface BaseElementNode extends Node {
 
 export interface PlainElementNode extends BaseElementNode {
   tagType: ElementTypes.ELEMENT
-  codegenNode: any
+  codegenNode: VNodeCall | SimpleExpressionNode
 }
 
 export interface ComponentNode extends BaseElementNode {
   tagType: ElementTypes.COMPONENT
-  codegenNode: any
+  codegenNode: VNodeCall
 }
 
 export interface TemplateNode extends BaseElementNode {
@@ -87,7 +91,7 @@ export interface AttributeNode extends Node {
 export interface RootNode extends Node {
   type: NodeTypes.ROOT
   children: TemplateChildNode[]
-  codegenNode?: any
+  codegenNode?: TemplateChildNode | JSChildNode
 }
 
 // 父节点
@@ -126,7 +130,7 @@ export function createVNodeCall(
   patchFlag?: VNodeCall['patchFlag'],
   isBlock: VNodeCall['isBlock'] = false,
   isComponent: VNodeCall['isComponent'] = false,
-) {
+): VNodeCall {
   if (context) {
     if (isBlock) {
       context.helper(OPEN_BLOCK)

@@ -1,6 +1,9 @@
 import { isString } from 'shared/index'
-import type { RootNode } from './ast'
+import type { InterpolationNode, JSChildNode, RootNode, TemplateChildNode, TextNode } from './ast'
 import { NodeTypes } from './ast'
+import { TO_DISPLAY_STRING, helperNameMap } from './runtimeHelpers'
+
+type CodegenNode = TemplateChildNode | JSChildNode
 
 interface CodegenOptions {
 
@@ -9,6 +12,7 @@ interface CodegenOptions {
 interface CodegenContext extends CodegenOptions {
   code: string
   push(code: string): void
+  helper(key: symbol): string
 }
 
 export interface CodegenResult {
@@ -19,6 +23,9 @@ export interface CodegenResult {
 function createCodegenContext(): CodegenContext {
   const context = {
     code: '',
+    helper(key) {
+      return `_${helperNameMap[key]}`
+    },
     push(code) {
       context.code += code
     },
@@ -54,22 +61,39 @@ export function generate(ast: RootNode): CodegenResult {
   }
 }
 
-function genNode(node: any, context: CodegenContext) {
+function genNode(node: CodegenNode | string, context: CodegenContext) {
+  if (node === undefined) return
   if (isString(node)) {
     context.push(node)
     return
   }
 
   switch (node.type) {
+    case NodeTypes.ELEMENT:
+      genNode(node.codegenNode!, context)
+      break
     case NodeTypes.TEXT:
       genText(node, context)
+      break
+    case NodeTypes.INTERPOLATION:
+      genInterpolation(node, context)
       break
   }
 }
 
 function genText(
-  node: any,
+  node: TextNode,
   context: CodegenContext,
 ) {
   context.push(JSON.stringify(node.content))
+}
+
+function genInterpolation(
+  node: InterpolationNode,
+  context: CodegenContext,
+) {
+  const { push, helper } = context
+  push(`${helper(TO_DISPLAY_STRING)}(`)
+  genNode(node.content, context)
+  push(')')
 }
