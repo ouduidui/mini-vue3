@@ -190,10 +190,8 @@ function parseTag(context: ParserContext, type: TagType): ElementNode | undefine
   let tagType = ElementTypes.ELEMENT
   if (tag === 'slot')
     tagType = ElementTypes.SLOT
-
   else if (tag === 'template')
     tagType = ElementTypes.TEMPLATE
-
   else if (isComponent(tag, props, context))
     tagType = ElementTypes.COMPONENT
 
@@ -246,7 +244,7 @@ function parseAttributes(context: ParserContext, type: TagType): AttributeNode[]
 }
 
 /**
- * 解析当个属性
+ * 解析单个属性
  * @param context
  */
 function parseAttribute(context: ParserContext): AttributeNode {
