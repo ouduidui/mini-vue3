@@ -1,5 +1,5 @@
 import { isString } from 'shared/index'
-import type { InterpolationNode, JSChildNode, RootNode, TemplateChildNode, TextNode } from './ast'
+import type { InterpolationNode, JSChildNode, RootNode, SimpleExpressionNode, TemplateChildNode, TextNode } from './ast'
 import { NodeTypes } from './ast'
 import { TO_DISPLAY_STRING, helperNameMap } from './runtimeHelpers'
 
@@ -40,7 +40,7 @@ export function generate(ast: RootNode): CodegenResult {
     push,
   } = context
 
-  push('return')
+  genFunctionPreamble(ast, context)
 
   const functionName = 'render'
   const args = ['_ctx', '_cache']
@@ -75,6 +75,9 @@ function genNode(node: CodegenNode | string, context: CodegenContext) {
     case NodeTypes.TEXT:
       genText(node, context)
       break
+    case NodeTypes.SIMPLE_EXPRESSION:
+      genExpression(node, context)
+      break
     case NodeTypes.INTERPOLATION:
       genInterpolation(node, context)
       break
@@ -88,6 +91,10 @@ function genText(
   context.push(JSON.stringify(node.content))
 }
 
+function genExpression(node: SimpleExpressionNode, context: CodegenContext) {
+  const { content } = node
+  context.push(content)
+}
 function genInterpolation(
   node: InterpolationNode,
   context: CodegenContext,
@@ -96,4 +103,18 @@ function genInterpolation(
   push(`${helper(TO_DISPLAY_STRING)}(`)
   genNode(node.content, context)
   push(')')
+}
+
+function genFunctionPreamble(ast: RootNode, context: CodegenContext) {
+  const {
+    push,
+  } = context
+
+  const vueBinding = 'Vue'
+  const aliasHelper = (s: symbol) => `${helperNameMap[s]}: _${helperNameMap[s]}`
+
+  if (ast.helpers.length > 0)
+    push(`const { ${ast.helpers.map(aliasHelper).join(',')} } = ${vueBinding}\n`)
+
+  push('return')
 }

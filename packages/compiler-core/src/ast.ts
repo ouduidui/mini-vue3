@@ -92,6 +92,7 @@ export interface RootNode extends Node {
   type: NodeTypes.ROOT
   children: TemplateChildNode[]
   codegenNode?: TemplateChildNode | JSChildNode
+  helpers: symbol[]
 }
 
 // 父节点
@@ -119,6 +120,7 @@ export function createRoot(children: TemplateChildNode[]): RootNode {
     type: NodeTypes.ROOT,
     children,
     codegenNode: undefined,
+    helpers: [],
   }
 }
 

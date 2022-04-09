@@ -1,6 +1,6 @@
 import type { ParentNode, RootNode, TemplateChildNode } from './ast'
 import { NodeTypes, createVNodeCall } from './ast'
-import { FRAGMENT } from './runtimeHelpers'
+import { FRAGMENT, TO_DISPLAY_STRING } from './runtimeHelpers'
 import { isSingleElementRoot } from './transform/hoistStatic'
 
 interface TransformOptions {
@@ -51,6 +51,8 @@ export function transform(root: RootNode, options: TransformOptions) {
   traverseNode(root, context)
 
   createRootCodegen(root, context)
+
+  root.helpers = [...context.helpers.keys()]
 }
 
 function createRootCodegen(root: RootNode, context: TransformContext) {
@@ -88,6 +90,9 @@ function traverseNode(root: RootNode | TemplateChildNode, context: TransformCont
 
   // 判断节点类型，分别处理
   switch (root.type) {
+    case NodeTypes.INTERPOLATION:
+      context.helper(TO_DISPLAY_STRING)
+      break
     case NodeTypes.ELEMENT:
     case NodeTypes.ROOT:
       // 遍历子节点
