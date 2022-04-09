@@ -1,7 +1,8 @@
-import { isString } from 'shared/index'
-import type { InterpolationNode, JSChildNode, RootNode, SimpleExpressionNode, TemplateChildNode, TextNode } from './ast'
+import { isArray, isString, isSymbol } from 'shared/index'
+import type { CompoundExpressionNode, InterpolationNode, JSChildNode, RootNode, SimpleExpressionNode, TemplateChildNode, TextNode, VNodeCall } from './ast'
 import { NodeTypes } from './ast'
-import { TO_DISPLAY_STRING, helperNameMap } from './runtimeHelpers'
+import { OPEN_BLOCK, TO_DISPLAY_STRING, helperNameMap } from './runtimeHelpers'
+import { getVNodeBlockHelper, getVNodeHelper } from './utils'
 
 type CodegenNode = TemplateChildNode | JSChildNode
 
@@ -61,16 +62,21 @@ export function generate(ast: RootNode): CodegenResult {
   }
 }
 
-function genNode(node: CodegenNode | string, context: CodegenContext) {
+function genNode(node: CodegenNode | symbol | string, context: CodegenContext) {
   if (node === undefined) return
   if (isString(node)) {
     context.push(node)
     return
   }
 
+  if (isSymbol(node)) {
+    context.push(context.helper(node))
+    return
+  }
+
   switch (node.type) {
     case NodeTypes.ELEMENT:
-      genNode(node.codegenNode!, context)
+      genNode(node.codegenNode, context)
       break
     case NodeTypes.TEXT:
       genText(node, context)
@@ -81,7 +87,67 @@ function genNode(node: CodegenNode | string, context: CodegenContext) {
     case NodeTypes.INTERPOLATION:
       genInterpolation(node, context)
       break
+    case NodeTypes.COMPOUND_EXPRESSION:
+      genCompoundExpression(node, context)
+      break
+    case NodeTypes.VNODE_CALL:
+      genVNodeCall(node, context)
+      break
   }
+}
+
+function genVNodeCall(node: VNodeCall, context: CodegenContext) {
+  const { push, helper } = context
+  const { tag, props, children, isBlock, isComponent } = node
+  if (isBlock)
+    push(`(${helper(OPEN_BLOCK)}(), `)
+
+  const callHelper: symbol = isBlock ? getVNodeBlockHelper(isComponent) : getVNodeHelper(isComponent)
+  push(`${helper(callHelper)}(`)
+  genNodeList(
+    genNullableArgs([tag, props, children]),
+    context,
+  )
+  push(')')
+  if (isBlock)
+    push(')')
+}
+
+function genNullableArgs(args: any[]) {
+  let i = args.length
+  while (i--)
+    if (args[i] != null) break
+  return args.slice(0, i + 1).map(arg => arg || 'null')
+}
+
+function genNodeList(
+  nodes: (string | symbol | CodegenNode | TemplateChildNode[])[],
+  context: CodegenContext,
+) {
+  const { push } = context
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i]
+    if (isString(node))
+      push(node)
+
+    else if (isArray(node))
+      genNodeListAsArray(node, context)
+
+    else
+      genNode(node, context)
+
+    if (i < nodes.length - 1)
+      push(',')
+  }
+}
+
+function genNodeListAsArray(
+  nodes: (string | CodegenNode | TemplateChildNode[])[],
+  context: CodegenContext,
+) {
+  context.push('[')
+  genNodeList(nodes, context)
+  context.push(']')
 }
 
 function genText(
@@ -103,6 +169,19 @@ function genInterpolation(
   push(`${helper(TO_DISPLAY_STRING)}(`)
   genNode(node.content, context)
   push(')')
+}
+
+function genCompoundExpression(
+  node: CompoundExpressionNode,
+  context: CodegenContext,
+) {
+  for (let i = 0; i < node.children!.length; i++) {
+    const child = node.children![i]
+    if (isString(child))
+      context.push(child)
+    else
+      genNode(child, context)
+  }
 }
 
 function genFunctionPreamble(ast: RootNode, context: CodegenContext) {

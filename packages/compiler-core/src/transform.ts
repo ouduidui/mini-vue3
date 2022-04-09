@@ -15,7 +15,7 @@ export interface TransformContext {
 
 export type NodeTransform = (
   node: RootNode | TemplateChildNode,
-  context: any
+  context: TransformContext
 ) => void | (() => void) | (() => void)[]
 
 /**

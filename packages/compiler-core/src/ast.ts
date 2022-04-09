@@ -11,6 +11,7 @@ export const enum NodeTypes {
   INTERPOLATION, // 插值
   ATTRIBUTE, // 属性
   VNODE_CALL, // vnode 调用
+  COMPOUND_EXPRESSION,
 }
 
 export const enum ElementTypes {
@@ -24,7 +25,7 @@ export type JSChildNode =
   | VNodeCall
   | ExpressionNode
 
-export type TemplateChildNode = InterpolationNode | TextNode | ElementNode
+export type TemplateChildNode = InterpolationNode | TextNode | ElementNode | CompoundExpressionNode
 
 export interface Node {
   type: NodeTypes
@@ -42,7 +43,19 @@ export interface InterpolationNode extends Node {
   content: ExpressionNode
 }
 
-export type ExpressionNode = SimpleExpressionNode
+export interface CompoundExpressionNode extends Node {
+  type: NodeTypes.COMPOUND_EXPRESSION
+  children: (
+    | SimpleExpressionNode
+    | CompoundExpressionNode
+    | InterpolationNode
+    | TextNode
+    | string
+    | symbol
+  )[]
+}
+
+export type ExpressionNode = SimpleExpressionNode | CompoundExpressionNode
 
 export interface SimpleExpressionNode {
   type: NodeTypes.SIMPLE_EXPRESSION
@@ -98,6 +111,11 @@ export interface RootNode extends Node {
 // 父节点
 export type ParentNode = RootNode | ElementNode
 
+export type TemplateTextChildNode =
+  | TextNode
+  | InterpolationNode
+  | CompoundExpressionNode
+
 export interface VNodeCall extends Node {
   type: NodeTypes.VNODE_CALL
   tag: string | symbol
@@ -105,6 +123,7 @@ export interface VNodeCall extends Node {
   children:
   | TemplateChildNode[] // multiple children
   | SimpleExpressionNode // hoisted
+  | TemplateTextChildNode // single text child
   | undefined
   patchFlag: string | undefined
   isBlock: boolean

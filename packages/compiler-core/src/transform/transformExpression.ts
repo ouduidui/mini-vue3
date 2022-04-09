@@ -1,10 +1,9 @@
-import type { RootNode, SimpleExpressionNode, TemplateChildNode } from 'compiler-core/ast'
+import type { SimpleExpressionNode } from 'compiler-core/ast'
 import { NodeTypes } from 'compiler-core/ast'
+import type { NodeTransform } from 'compiler-core/transform'
 import type { ExpressionNode } from './../ast'
 
-export function transformExpression(
-  node: RootNode | TemplateChildNode,
-) {
+export const transformExpression: NodeTransform = (node) => {
   if (node.type === NodeTypes.INTERPOLATION) {
     node.content = processExpression(
       node.content as SimpleExpressionNode,

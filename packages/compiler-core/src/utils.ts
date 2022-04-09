@@ -1,4 +1,4 @@
-import type { RootNode, SlotOutletNode, TemplateChildNode } from './ast'
+import type { InterpolationNode, RootNode, SlotOutletNode, TemplateChildNode, TextNode } from './ast'
 import { ElementTypes, NodeTypes } from './ast'
 import { CREATE_BLOCK, CREATE_ELEMENT_BLOCK, CREATE_ELEMENT_VNODE, CREATE_VNODE } from './runtimeHelpers'
 
@@ -14,4 +14,10 @@ export function getVNodeHelper(isComponent: boolean) {
 
 export function getVNodeBlockHelper(isComponent: boolean) {
   return isComponent ? CREATE_BLOCK : CREATE_ELEMENT_BLOCK
+}
+
+export function isText(
+  node: TemplateChildNode,
+): node is TextNode | InterpolationNode {
+  return node.type === NodeTypes.INTERPOLATION || node.type === NodeTypes.TEXT
 }

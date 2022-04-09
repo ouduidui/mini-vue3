@@ -11,6 +11,8 @@ export const toTypeString = (value: unknown): string => objectToString.call(valu
 
 // 判断是否为字符串
 export const isString = (val: unknown): val is string => typeof val === 'string'
+// 判断是否为符号
+export const isSymbol = (val: unknown): val is symbol => typeof val === 'symbol'
 // 判断是否为数组
 export const isArray = Array.isArray
 // 判断是否为函数
