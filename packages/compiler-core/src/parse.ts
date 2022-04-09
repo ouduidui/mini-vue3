@@ -12,18 +12,23 @@ import {
   createRoot,
 } from 'compiler-core/ast'
 import { isArray } from 'shared/index'
+import type { ParserOptions } from './options'
 
 // 默认配置
-export const defaultParserOptions = {
+export const defaultParserOptions: MergedParserOptions = {
   delimiters: ['{{', '}}'], // 插值分隔符
 }
 
+type OptionalOptions =
+  | 'isNativeTag'
+type MergedParserOptions =
+  Omit<Required<ParserOptions>, OptionalOptions>&
+  Pick<ParserOptions, OptionalOptions>
+
 export interface ParserContext {
-  options: ParserOptions
+  options: MergedParserOptions
   source: string
 }
-
-export type ParserOptions = any
 
 type AttributeValue =
   | {

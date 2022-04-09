@@ -75,4 +75,5 @@ export function isProxy(value: any): boolean {
  * 判断是否为对象，是的话进行响应式处理
  * @param value
  */
-export const toReactive = <T>(value: T): T => (isObject(value) ? reactive(value) : value)
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-constraint
+export const toReactive = <T extends unknown>(value: T): T => (isObject(value) ? reactive(value) : value)

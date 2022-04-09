@@ -1,11 +1,9 @@
+import { isArray } from 'shared/index'
 import type { ParentNode, RootNode, TemplateChildNode } from './ast'
 import { NodeTypes, createVNodeCall } from './ast'
+import type { TransformOptions } from './options'
 import { FRAGMENT, TO_DISPLAY_STRING } from './runtimeHelpers'
 import { isSingleElementRoot } from './transform/hoistStatic'
-
-interface TransformOptions {
-  nodeTransforms?: NodeTransform[]
-}
 
 export interface TransformContext {
   nodeTransforms: NodeTransform[]
@@ -84,9 +82,18 @@ function traverseNode(root: RootNode | TemplateChildNode, context: TransformCont
   // 获取处理节点插件
   const { nodeTransforms } = context
 
+  const exitFns: (() => void)[] = []
   // 遍历插件，一一执行
-  for (let i = 0; i < nodeTransforms.length; i++)
-    nodeTransforms[i](root, context)
+  for (let i = 0; i < nodeTransforms.length; i++) {
+    const transform = nodeTransforms[i]
+    const onExit = transform(root, context)
+    if (onExit) {
+      if (isArray(onExit))
+        exitFns.push(...onExit)
+      else
+        exitFns.push(onExit)
+    }
+  }
 
   // 判断节点类型，分别处理
   switch (root.type) {
@@ -98,6 +105,10 @@ function traverseNode(root: RootNode | TemplateChildNode, context: TransformCont
       // 遍历子节点
       traverseChildren(root, context)
   }
+
+  let i = exitFns.length
+  while (i--)
+    exitFns[i]()
 }
 
 /**

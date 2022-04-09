@@ -1,6 +1,6 @@
 import type { Component, ComponentInternalInstance, Data } from 'runtime-core/component'
 import type { Ref } from 'reactivity/ref'
-import { ShapeFlags, isObject, isString } from 'shared/index'
+import { ShapeFlags, isArray, isObject, isString } from 'shared/index'
 import type { RendererElement, RendererNode } from './renderer'
 
 export const Fragment = Symbol('Fragment')
@@ -15,9 +15,13 @@ export interface VNodeProps {
   ref?: VNodeRef
 }
 
-export interface VNode<HostNode = RendererNode, HostElement = RendererElement, ExtraProps = Record<string, any>> {
+export interface VNode<
+  HostNode = RendererNode,
+  HostElement = RendererElement,
+  ExtraProps = Record<string, any>,
+> {
   type: VNodeTypes
-  props: VNodeProps | null
+  props: (VNodeProps & ExtraProps) | null
   children: VNodeNormalizedChildren
   key: string | number | symbol | null
 
@@ -92,4 +96,25 @@ export function createTextVNode(text = ' ') {
 
 export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
   return n1.type === n2.type && n1.key === n2.key
+}
+
+export { createVNode as createElementVNode }
+
+export function normalizeVNode(child: VNodeChild): VNode {
+  if (child == null || typeof child === 'boolean') {
+    return createVNode(Comment)
+  }
+  else if (isArray(child)) {
+    return createVNode(
+      Fragment,
+      null,
+      child.slice(),
+    )
+  }
+  else if (typeof child === 'object') {
+    return child
+  }
+  else {
+    return createVNode(Text, null, String(child))
+  }
 }

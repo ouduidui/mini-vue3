@@ -1,11 +1,12 @@
 import { EMPTY_ARR, EMPTY_OBJ, ShapeFlags, invokeArrayFns } from 'shared/index'
 import type { VNode, VNodeArrayChildren } from 'runtime-core/vnode'
-import { Fragment, Text, isSameVNodeType } from 'runtime-core/vnode'
-import { effect } from 'reactivity/effect'
+import { Fragment, Text, isSameVNodeType, normalizeVNode } from 'runtime-core/vnode'
+import { ReactiveEffect } from 'reactivity/effect'
 import { shouldUpdateComponent } from 'runtime-core/componentRenderUtils'
 import { createAppAPI } from './apiCreateApp'
 import { createComponentInstance, setupComponent } from './component'
 import type { ComponentInternalInstance, Data } from './component'
+import type { SchedulerJob } from './scheduler'
 import { flushPostFlushCbs, queueJob, queuePostFlushCb } from './scheduler'
 
 export type RendererNode = Record<string, any>
@@ -456,7 +457,7 @@ function baseCreateRenderer(options: RendererOptions): any {
    */
   const mountChildren: MountChildrenFn = (children, container, anchor, parentComponent, start = 0) => {
     for (let i = start; i < children.length; i++) {
-      const child = children[i] as VNode
+      const child = normalizeVNode(children[i])
       patch(null, child, container, anchor, parentComponent)
     }
   }
@@ -530,7 +531,7 @@ function baseCreateRenderer(options: RendererOptions): any {
           invokeArrayFns(bm)
 
         // 执行render函数，获取返回的vnode
-        const subTree = (instance.subTree = instance.render.call(proxy))
+        const subTree = (instance.subTree = instance.render.call(proxy, proxy))
 
         patch(null, subTree, container, anchor, instance)
 
@@ -554,7 +555,7 @@ function baseCreateRenderer(options: RendererOptions): any {
         if (bu)
           invokeArrayFns(bu)
 
-        const nextTree = instance.render.call(proxy)
+        const nextTree = instance.render.call(proxy, proxy)
 
         const prevTree = instance.subTree
         instance.subTree = nextTree
@@ -566,9 +567,12 @@ function baseCreateRenderer(options: RendererOptions): any {
       }
     }
 
-    instance.update = effect(componentUpdateFn, {
-      scheduler: () => queueJob(instance.update),
-    })
+    const effect = (instance.update = new ReactiveEffect(
+      componentUpdateFn,
+      () => queueJob(instance.update),
+    ))
+    const update = (instance.update = effect.run.bind(effect) as SchedulerJob)
+    update()
   }
 
   function updateComponent(n1: VNode, n2: VNode) {

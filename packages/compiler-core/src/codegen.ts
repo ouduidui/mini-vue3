@@ -1,14 +1,11 @@
 import { isArray, isString, isSymbol } from 'shared/index'
 import type { CompoundExpressionNode, InterpolationNode, JSChildNode, RootNode, SimpleExpressionNode, TemplateChildNode, TextNode, VNodeCall } from './ast'
 import { NodeTypes } from './ast'
+import type { CodegenOptions } from './options'
 import { OPEN_BLOCK, TO_DISPLAY_STRING, helperNameMap } from './runtimeHelpers'
 import { getVNodeBlockHelper, getVNodeHelper } from './utils'
 
 type CodegenNode = TemplateChildNode | JSChildNode
-
-interface CodegenOptions {
-
-}
 
 interface CodegenContext extends CodegenOptions {
   code: string

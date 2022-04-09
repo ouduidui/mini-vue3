@@ -40,13 +40,13 @@ return function render(_ctx, _cache){return _createElementVNode('div',[])}"
   it('complex element', () => {
     const ast = baseParse('<div>Hi, {{message}}</div>')
     transform(ast, {
-      nodeTransforms: [transformText, transformElement, transformExpression],
+      nodeTransforms: [transformExpression, transformElement, transformText],
     })
 
     const { code } = generate(ast)
     expect(code).toMatchInlineSnapshot(`
-"const { createElementVNode: _createElementVNode } = Vue
-return function render(_ctx, _cache){return _createElementVNode('div',[],[\\"Hi, \\" + _toDisplayString(message)])}"
+"const { toDisplayString: _toDisplayString,createElementVNode: _createElementVNode } = Vue
+return function render(_ctx, _cache){return _createElementVNode('div',[],[\\"Hi, \\" + _toDisplayString(_ctx.message)])}"
 `)
   })
 })

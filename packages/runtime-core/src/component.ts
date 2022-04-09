@@ -1,4 +1,4 @@
-import type { VNode } from 'runtime-core/vnode'
+import type { VNode, VNodeChild } from 'runtime-core/vnode'
 import { EMPTY_OBJ, isFunction, isObject } from 'shared/index'
 import { proxyRefs } from 'reactivity/ref'
 import { PublicInstanceProxyHandlers } from 'runtime-core/componentPublicInstance'
@@ -8,6 +8,9 @@ import type { EmitFn } from 'runtime-core/componentEmit'
 import { emit } from 'runtime-core/componentEmit'
 import type { InternalSlots } from 'runtime-core/componentSlots'
 import { initSlots } from 'runtime-core/componentSlots'
+import type { CompilerOptions } from 'compiler-core/options'
+
+export type RenderFunction = () => VNodeChild
 
 export type Component = any
 
@@ -21,7 +24,7 @@ export interface ComponentInternalInstance {
   subTree: VNode
   update: any
   render: any
-  proxy: any; // 代理this
+  proxy: any // 代理this
   ctx: Data
   provides: Data
   // state
@@ -47,6 +50,7 @@ export const enum LifecycleHooks {
   UPDATED = 'u',
 }
 
+// eslint-disable-next-line import/no-mutable-exports
 export let currentInstance: ComponentInternalInstance | null = null
 
 export const getCurrentInstance = (): ComponentInternalInstance | null => currentInstance
@@ -98,7 +102,7 @@ export function createComponentInstance(
 export function setupComponent(instance: ComponentInternalInstance) {
   const { props, children } = instance.vnode
   // 初始化属性
-  initProps(instance, props)
+  initProps(instance, props as Data)
 
   // 初始化插槽
   initSlots(instance, children)
@@ -150,12 +154,28 @@ function handleSetupResult(instance: ComponentInternalInstance, setupResult: unk
   finishComponentSetup(instance)
 }
 
+type CompileFunction = (
+  template: string | object,
+  options?: CompilerOptions
+) => RenderFunction
+
+let compile: CompileFunction | undefined
+
+export function registerRuntimeCompiler(_complie: any) {
+  compile = _complie
+}
+
 /**
  * 当组件状态化后，实现render函数
  * @param instance
  */
 function finishComponentSetup(instance: ComponentInternalInstance) {
   const Component = instance.type
+
+  if (compile && !Component.render) {
+    if (Component.template)
+      Component.render = compile(Component.template)
+  }
 
   if (Component.render)
     instance.render = Component.render
