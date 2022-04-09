@@ -15,8 +15,4 @@ pnpm test:mini-vue3
 - [x] reactive
 - [x] runtime-core
 - [x] runtime-dom
-- [ ] complier-core
-- - [x] parse
-- - [ ] transform
-- - [ ] codegen
-- [ ] complier-dom
+- [x] complier-core
